@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Event {
+  id                String         @id @default("default")
+  title             String         @default("Mingle Booth")
+  subtitle          String         @default("Capture Your Memories")
+  brandLogoUrl      String?        @map("brand_logo_data_url")
+  stripBgColor      String         @default("#1a1a28") @map("strip_bg_color")
+  stripTextColor    String         @default("#ffffff") @map("strip_text_color")
+  stripShowTitle    Boolean        @default(true) @map("strip_show_title")
+  stripShowDate     Boolean        @default(true) @map("strip_show_date")
+  defaultLayout     String         @default("3v") @map("default_layout")
+  adminPassword     String?        @default("admin1234") @map("admin_password")
+  adminPasswordHash String?        @map("admin_password_hash")
+  cameraDeviceId    String?        @map("camera_device_id")
+  cameraResolution  String         @default("1920x1080") @map("camera_resolution")
+  mirrorCamera      Boolean        @default(true) @map("mirror_camera")
+  createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  frames            Frame[]
+  sessions          PhotoSession[]
+
+  @@map("events")
+}
+
+model Frame {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId   String   @map("event_id")
+  name      String
+  dataUrl   String   @map("data_url")
+  isActive  Boolean  @default(false) @map("is_active")
+  width     Int?
+  height    Int?
+  slots     Json     @default("[]")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId, isActive], map: "frames_event_idx")
+  @@map("frames")
+}
+
+model PhotoSession {
+  id         String         @id
+  eventId    String         @map("event_id")
+  layout     String
+  photoCount Int            @map("photo_count")
+  stripUrl   String         @map("strip_url")
+  gifUrl     String?        @map("gif_url")
+  viewerUrl  String?        @map("viewer_url")
+  stripW     Int            @default(800) @map("strip_w")
+  stripH     Int            @map("strip_h")
+  frameUrl   String?        @map("frame_url")
+  createdAt  DateTime       @default(now()) @map("created_at") @db.Timestamptz
+  event      Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  photos     SessionPhoto[]
+
+  @@index([eventId, createdAt(sort: Desc)], map: "sessions_event_idx")
+  @@map("photo_sessions")
+}
+
+model SessionPhoto {
+  id        String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId String       @map("session_id")
+  slotIndex Int          @map("slot_index")
+  url       String
+  slotX     Int          @default(0) @map("slot_x")
+  slotY     Int          @default(0) @map("slot_y")
+  slotW     Int          @default(0) @map("slot_w")
+  slotH     Int          @default(0) @map("slot_h")
+  createdAt DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  session   PhotoSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, slotIndex])
+  @@index([sessionId, slotIndex], map: "photos_session_idx")
+  @@map("session_photos")
+}
