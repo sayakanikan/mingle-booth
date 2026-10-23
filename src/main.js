@@ -407,10 +407,13 @@ if (!IS_VIEWER) {
     toastContainer.id = 'toast-container';
     app.appendChild(toastContainer);
 
-    // Admin hidden trigger (top-right corner)
-    adminTrigger = document.createElement('div');
+    // Admin button (top-right corner)
+    adminTrigger = document.createElement('button');
     adminTrigger.id = 'admin-trigger';
-    adminTrigger.title = '';
+    adminTrigger.className = 'admin-floating-trigger';
+    adminTrigger.innerHTML = '<span class="admin-trigger-icon">⚙</span><span>Admin</span>';
+    adminTrigger.title = 'Open Admin Settings';
+    adminTrigger.setAttribute('aria-label', 'Open Admin Settings');
     app.appendChild(adminTrigger);
 
     // Password modal
@@ -431,16 +434,16 @@ if (!IS_VIEWER) {
     initParticles(particleCanvas);
     transitionTo(AppState.SCREENSAVER);
 
-    // Admin trigger: triple-click top-right corner
-    adminTrigger.addEventListener('click', () => {
-      triggerClicks++;
-      clearTimeout(triggerTimer);
-      triggerTimer = setTimeout(() => { triggerClicks = 0; }, 800);
-      if (triggerClicks >= 3) {
-        triggerClicks = 0;
-        pwdModal.open();
-      }
+    // Admin button opens password modal directly
+    adminTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      pwdModal.open();
     });
+
+    // Auto-open admin if requested via query param ?admin=1
+    if (urlParams.get('admin') === '1' || urlParams.get('admin') === 'true') {
+      pwdModal.open();
+    }
   })();
 }
 
@@ -464,6 +467,9 @@ function transitionTo(newState) {
 
   // Enter new
   const screen = screens[newState];
+  if (adminTrigger) {
+    adminTrigger.style.display = (newState === AppState.ADMIN) ? 'none' : 'inline-flex';
+  }
   setTimeout(() => {
     screen.el.classList.add('active');
     screen.onEnter?.();
@@ -519,8 +525,8 @@ function createScreenSaver() {
       <p class="ss-tap-label">Touch Anywhere to Start</p>
     </div>
 
-    <div class="ss-no-frame-pill" id="ss-no-frame-pill" style="display:none;">
-      ⚠ No active frame · Triple-tap top-right for Admin
+    <div class="ss-no-frame-pill" id="ss-no-frame-pill" style="display:none;" title="Click to open Admin Panel">
+      ⚠ No active frame · Click for Admin
     </div>
   `;
 
@@ -542,7 +548,8 @@ function createScreenSaver() {
   }
 
   // Click anywhere to start
-  el.addEventListener('click', () => {
+  el.addEventListener('click', (e) => {
+    if (e.target.closest('#ss-no-frame-pill')) return;
     transitionTo(AppState.CAPTURE);
   });
 
@@ -568,7 +575,12 @@ function createScreenSaver() {
 
       const activeFrame = settings.activeFrame;
       if (noFramePill) {
-        noFramePill.style.display = (!activeFrame || !activeFrame.slots?.length) ? 'block' : 'none';
+        noFramePill.style.display = (!activeFrame || !activeFrame.slots?.length) ? 'inline-flex' : 'none';
+        noFramePill.style.cursor = 'pointer';
+        noFramePill.onclick = (e) => {
+          e.stopPropagation();
+          pwdModal?.open();
+        };
       }
     },
     onExit() {},
@@ -590,6 +602,15 @@ function createCaptureScreen() {
         <canvas id="overlay-canvas"></canvas>
         <div class="camera-flash" id="camera-flash"></div>
         <div class="shot-aspect-badge" id="shot-aspect-badge"></div>
+        <div class="countdown-wrap" id="countdown-wrap">
+          <div class="countdown-number" id="countdown-num">
+            <svg viewBox="0 0 108 108">
+              <circle class="countdown-ring" id="countdown-ring" cx="54" cy="54" r="50"/>
+            </svg>
+            <span id="countdown-text">●</span>
+          </div>
+          <div class="countdown-label" id="countdown-label">Get ready!</div>
+        </div>
       </div>
       <div class="capture-no-frame-overlay" id="capture-no-frame" style="display:none;">
         <div class="capture-no-frame-card">
@@ -598,7 +619,7 @@ function createCaptureScreen() {
           <p style="color:var(--clr-text-2);font-size:0.95rem;line-height:1.5;">
             No active frame is selected or the active frame has no photo slots defined.
           </p>
-          <div style="display:flex;gap:12px;margin-top:16px;">
+          <div class="capture-no-frame-actions">
             <button class="btn btn-primary btn-sm" id="btn-open-admin-from-capture">⚙ Open Admin Panel</button>
             <button class="btn btn-secondary btn-sm" id="btn-back-home-from-capture">🏠 Back to Home</button>
           </div>
@@ -607,17 +628,8 @@ function createCaptureScreen() {
     </div>
     <div class="capture-sidebar">
       <div class="capture-shots-strip" id="shots-strip"></div>
-      <div class="countdown-wrap" id="countdown-wrap">
-        <div class="countdown-number" id="countdown-num">
-          <svg viewBox="0 0 108 108">
-            <circle class="countdown-ring" id="countdown-ring" cx="54" cy="54" r="50"/>
-          </svg>
-          <span id="countdown-text">●</span>
-        </div>
-        <div class="countdown-label" id="countdown-label">Get ready!</div>
-      </div>
       <div class="capture-shot-counter" id="shot-counter"></div>
-      <button class="btn btn-secondary btn-sm" id="btn-capture-cancel" style="margin-top:auto;width:100%;opacity:0.7;">🏠 Back to Home</button>
+      <button class="btn btn-secondary btn-sm" id="btn-capture-cancel">🏠 Back to Home</button>
     </div>
   `;
 
@@ -1041,7 +1053,7 @@ function createResultScreen() {
         <canvas id="result-canvas-strip"></canvas>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:24px;align-items:center;">
+      <div class="result-side-col">
         <div class="result-strip-wrap" id="gif-wrap">
           <div class="result-strip-label">Animated GIF</div>
           <div id="gif-preview-container"></div>
@@ -1051,7 +1063,7 @@ function createResultScreen() {
           <div class="result-qr-title">📱 Scan to Download</div>
           <canvas id="qr-code-canvas"></canvas>
           <p class="result-qr-note" id="result-qr-note">Point your phone camera at the QR code to get your photos</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px;">
+          <div class="result-qr-actions">
             <button class="btn btn-sm btn-secondary" id="btn-dl-strip">⬇ Download Strip</button>
             <button class="btn btn-sm btn-secondary" id="btn-dl-gif" style="display:none;">⬇ Download GIF</button>
           </div>
@@ -1254,7 +1266,7 @@ function createAdminPanel() {
   el.innerHTML = `
     <div class="admin-topbar">
       <div class="admin-topbar-title">Admin Dashboard</div>
-      <div style="display:flex;gap:8px;">
+      <div class="admin-topbar-actions">
         <button class="btn btn-sm btn-secondary" id="admin-save-btn">💾 Save Settings</button>
         <button class="btn btn-sm btn-secondary" id="admin-close-btn">✕ Close</button>
       </div>
@@ -1453,11 +1465,22 @@ function createAdminPanel() {
         ${settings.brandLogoDataUrl ? `<img src="${settings.brandLogoDataUrl}" style="max-height:80px;margin-top:8px;border-radius:8px;" id="logo-preview" />` : '<div id="logo-preview"></div>'}
       </div>
       <div class="admin-field">
-        <label class="admin-label">Strip Background Color</label>
-        <div class="admin-row">
-          <input type="color" id="strip-bg-color" value="${settings.stripBgColor||'#1a1a28'}" style="height:36px;border:none;background:none;cursor:pointer;" />
-          <span style="font-size:.85rem;color:var(--clr-text-2);">Strip text color:</span>
-          <input type="color" id="strip-text-color" value="${settings.stripTextColor||'#ffffff'}" style="height:36px;border:none;background:none;cursor:pointer;" />
+        <label class="admin-label">Photo Strip Colors</label>
+        <div class="admin-color-row">
+          <div class="admin-color-item">
+            <span class="admin-color-label">Background</span>
+            <div class="admin-color-picker-wrap">
+              <input type="color" class="admin-color-input" id="strip-bg-color" value="${settings.stripBgColor||'#1a1a28'}" />
+              <span class="admin-color-val" id="strip-bg-val">${settings.stripBgColor||'#1a1a28'}</span>
+            </div>
+          </div>
+          <div class="admin-color-item">
+            <span class="admin-color-label">Text &amp; Date</span>
+            <div class="admin-color-picker-wrap">
+              <input type="color" class="admin-color-input" id="strip-text-color" value="${settings.stripTextColor||'#ffffff'}" />
+              <span class="admin-color-val" id="strip-text-val">${settings.stripTextColor||'#ffffff'}</span>
+            </div>
+          </div>
         </div>
       </div>
       <div class="admin-field">
@@ -1471,6 +1494,13 @@ function createAdminPanel() {
         </label>
       </div>
     `;
+
+    const bgInput = el.querySelector('#strip-bg-color');
+    const bgVal = el.querySelector('#strip-bg-val');
+    const txtInput = el.querySelector('#strip-text-color');
+    const txtVal = el.querySelector('#strip-text-val');
+    bgInput?.addEventListener('input', () => { if (bgVal) bgVal.textContent = bgInput.value; });
+    txtInput?.addEventListener('input', () => { if (txtVal) txtVal.textContent = txtInput.value; });
 
     setupFileUpload(
       el.querySelector('#logo-upload-zone'),
@@ -1492,13 +1522,13 @@ function createAdminPanel() {
     const framesHtml = (settings.frames || []).map(f => {
       const n = f.slots?.length || 0;
       return `
-      <div class="frame-preview-item ${settings.activeFrame?.id === f.id ? 'selected' : ''}" data-frame-id="${f.id}" style="position:relative;">
+      <div class="frame-preview-item ${settings.activeFrame?.id === f.id ? 'selected' : ''}" data-frame-id="${f.id}">
         <img src="${f.dataUrl}" alt="${f.name}" />
-        <button class="remove-frame" data-remove="${f.id}">✕</button>
-        <span style="position:absolute;left:6px;top:6px;padding:2px 8px;border-radius:999px;font-size:.7rem;font-weight:700;background:${n ? 'rgba(56,189,248,.9)' : 'rgba(239,68,68,.9)'};color:#fff;">
+        <button class="remove-frame" data-remove="${f.id}" title="Delete frame">✕</button>
+        <span class="frame-slot-badge ${n ? 'has-slots' : 'no-slots'}">
           ${n ? `${n} photo${n > 1 ? 's' : ''}` : '⚠ No slots'}
         </span>
-        <button class="btn btn-sm btn-secondary edit-slots" data-edit="${f.id}" style="position:absolute;left:6px;right:6px;bottom:6px;padding:4px;font-size:.75rem;">✎ Edit Slots</button>
+        <button class="btn btn-sm btn-secondary edit-slots" data-edit="${f.id}">✎ Edit Slots</button>
       </div>`;
     }).join('');
 
@@ -1734,7 +1764,12 @@ function createAdminPanel() {
               <button class="btn btn-sm btn-danger gallery-delete" data-id="${s.id}">🗑 Delete</button>
             </div>
           </div>
-          ${s.viewer_url ? `<canvas class="gallery-qr-mini" data-url="${s.viewer_url}" width="72" height="72"></canvas>` : ''}
+          ${s.viewer_url ? `
+            <div class="gallery-card-qr">
+              <canvas class="gallery-qr-mini" data-url="${s.viewer_url}" width="68" height="68"></canvas>
+              <span class="gallery-qr-hint">Scan QR</span>
+            </div>
+          ` : ''}
         </div>
       `;
     }).join('');
@@ -1880,7 +1915,7 @@ function createPasswordModal() {
       <div class="modal-title">🔒 Admin Access</div>
       <input type="password" class="admin-input" id="pwd-input" placeholder="Enter admin password" autocomplete="off" />
       <div class="modal-error" id="pwd-error">Incorrect password. Try again.</div>
-      <div style="display:flex;gap:8px;justify-content:center;">
+      <div class="modal-actions">
         <button class="btn btn-primary btn-sm" id="pwd-submit">Enter</button>
         <button class="btn btn-secondary btn-sm" id="pwd-cancel">Cancel</button>
       </div>
