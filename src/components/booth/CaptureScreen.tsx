@@ -154,15 +154,15 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
   const strokeOffset = RING_CIRCUMFERENCE * (1 - progress);
 
   return (
-    <div className="absolute inset-0 flex flex-col md:flex-row items-center justify-between p-4 md:p-8 z-20 gap-6">
+    <div className="absolute inset-0 flex flex-col md:flex-row items-center justify-between p-3 sm:p-4 md:p-8 z-20 gap-3 md:gap-6 min-h-0 overflow-hidden">
       {/* Video Viewport Stage */}
-      <div className="relative flex-1 w-full h-full flex items-center justify-center overflow-hidden">
+      <div className="relative flex-1 w-full min-h-0 flex items-center justify-center overflow-hidden">
         <div
-          className="relative max-w-full max-h-[82vh] rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black flex items-center justify-center"
+          className="relative max-w-full max-h-full rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl border border-white/10 bg-black flex items-center justify-center"
           style={{
             aspectRatio: activeSlot ? `${activeSlot.w} / ${activeSlot.h}` : '4 / 3',
             width: 'auto',
-            height: '100%',
+            maxHeight: '100%',
           }}
         >
           <video
@@ -181,15 +181,15 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
 
           {/* Aspect ratio badge */}
           {activeSlot && (
-            <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-xs font-medium text-white/80 border border-white/10">
+            <div className="absolute top-3 left-3 md:top-4 md:left-4 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] md:text-xs font-medium text-white/80 border border-white/10">
               {formatAspectRatio(activeSlot.w, activeSlot.h)}
             </div>
           )}
 
           {/* Countdown timer overlay */}
           {countdown !== null && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/20">
-              <div className="relative w-36 h-36 flex items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/25 backdrop-blur-[2px]">
+              <div className="relative w-28 h-28 md:w-36 md:h-36 flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 108 108">
                   <circle
                     cx="54"
@@ -212,11 +212,11 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
                     className="transition-all duration-300"
                   />
                 </svg>
-                <span className="absolute font-bold text-5xl text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+                <span className="absolute font-bold text-4xl md:text-5xl text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
                   {countdown === 0 ? '😊' : countdown}
                 </span>
               </div>
-              <div className="mt-3 px-4 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-sm font-semibold text-purple-200">
+              <div className="mt-3 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs md:text-sm font-semibold text-purple-200 border border-purple-400/20 shadow-lg">
                 {countdown === 0 ? 'SMILE! 📸' : 'Get ready...'}
               </div>
             </div>
@@ -225,24 +225,24 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
       </div>
 
       {/* Sidebar with Shot Tracker & Cancel */}
-      <div className="flex md:flex-col items-center justify-between gap-4 md:w-56 glass p-4 md:p-6 rounded-3xl shrink-0">
+      <div className="flex md:flex-col items-center justify-between gap-3 w-full md:w-56 glass p-3 md:p-5 rounded-2xl md:rounded-3xl shrink-0">
         <div className="text-center">
-          <div className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+          <div className="text-[11px] md:text-xs uppercase tracking-wider text-zinc-400 font-semibold">
             Shot {currentShot + 1} of {totalShots}
           </div>
         </div>
 
         {/* Shot thumbnails */}
-        <div className="flex md:flex-col gap-3.5 my-auto overflow-x-auto md:overflow-visible">
+        <div className="flex md:flex-col gap-2.5 my-auto overflow-x-auto md:overflow-visible py-1">
           {sortedSlots.map((s, idx) => {
             const thumb = capturedThumbs[idx];
             const isCurrent = idx === currentShot;
             return (
               <div
                 key={idx}
-                className={`relative w-16 h-16 md:w-20 md:h-20 rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center ${
+                className={`relative w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center shrink-0 ${
                   thumb
-                    ? 'border-purple-400/80 shadow-md'
+                    ? 'border-purple-400/80 shadow-md ring-1 ring-purple-400/40'
                     : isCurrent
                     ? 'border-sky-400 bg-sky-500/10 shadow-[0_0_15px_rgba(56,189,248,0.4)]'
                     : 'border-white/10 bg-white/5 opacity-50'
@@ -252,14 +252,14 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={thumb} alt={`Shot ${idx + 1}`} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="font-bold text-lg text-zinc-400">{idx + 1}</span>
+                  <span className="font-bold text-base md:text-lg text-zinc-400">{idx + 1}</span>
                 )}
               </div>
             );
           })}
         </div>
 
-        <button onClick={handleCancel} className="btn btn-secondary btn-sm w-full">
+        <button onClick={handleCancel} className="btn btn-secondary btn-sm text-xs px-3 py-1.5 w-auto md:w-full">
           🏠 Cancel
         </button>
       </div>

@@ -1,14 +1,21 @@
 import React from 'react';
 import Link from 'next/link';
-import { AdminNav } from '@/components/admin/AdminNav';
 import { logoutAction } from '@/actions/auth';
+import { isAdminAuthenticated } from '@/lib/auth';
+import { AdminNav } from '@/components/admin/AdminNav';
 import { redirect } from 'next/navigation';
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isAuthed = await isAdminAuthenticated();
+
+  if (!isAuthed) {
+    return <>{children}</>;
+  }
+
   const handleLogout = async () => {
     'use server';
     await logoutAction();
@@ -18,26 +25,26 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-[#f1f0ff] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="h-16 border-b border-white/10 px-6 flex items-center justify-between bg-[#12121a]/90 backdrop-blur-md sticky top-0 z-30">
-        <div className="flex items-center gap-3">
+      <header className="h-16 border-b border-white/10 px-4 md:px-6 flex items-center justify-between bg-[#12121a]/90 backdrop-blur-md sticky top-0 z-30">
+        <div className="flex items-center gap-2.5">
           <span className="text-xl">⚙️</span>
           <div>
-            <h1 className="font-bold text-base text-zinc-100">Admin Dashboard</h1>
-            <p className="text-[10px] text-zinc-400">Mingle Booth Experience Manager</p>
+            <h1 className="font-bold text-sm md:text-base text-zinc-100">Admin Dashboard</h1>
+            <p className="text-[10px] text-zinc-400 hidden sm:block">Mingle Booth Experience Manager</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             href="/"
-            className="btn btn-secondary btn-sm text-xs"
+            className="btn btn-secondary btn-sm text-xs px-2.5 sm:px-3"
             target="_blank"
             title="Open Kiosk in new tab"
           >
-            📸 View Booth
+            📸 <span className="hidden xs:inline">View</span> Booth
           </Link>
           <form action={handleLogout}>
-            <button type="submit" className="btn btn-danger btn-sm text-xs">
+            <button type="submit" className="btn btn-danger btn-sm text-xs px-2.5 sm:px-3">
               Log Out
             </button>
           </form>

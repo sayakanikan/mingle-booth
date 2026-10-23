@@ -21,8 +21,8 @@
   --color-danger: #f87171;
   --color-success: #34d399;
 
-  --font-sans: 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-display: 'Dancing Script', cursive;
+  --font-sans: var(--font-sans), 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-display), 'Dancing Script', cursive;
 
   --shadow-glow: 0 0 40px rgba(192, 132, 252, 0.4), 0 0 80px rgba(244, 114, 182, 0.2);
   --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -31,19 +31,25 @@
 }
 
 @keyframes bgPulse {
-  0% { opacity: 0.6; }
-  100% { opacity: 1; }
+  0% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+  100% { opacity: 0.5; transform: scale(1); }
 }
 
 @keyframes floatText {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0) rotate(var(--rot, 0deg)); }
+  50% { transform: translateY(-16px) rotate(calc(var(--rot, 0deg) + 2deg)); }
 }
 
 @keyframes ringPulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.6); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 24px rgba(192, 132, 252, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0); }
+  0% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0.7); }
+  60% { transform: scale(1.04); box-shadow: 0 0 0 20px rgba(192, 132, 252, 0); }
+  100% { transform: scale(0.96); box-shadow: 0 0 0 0 rgba(192, 132, 252, 0); }
 }
 
 @keyframes flashAnim {

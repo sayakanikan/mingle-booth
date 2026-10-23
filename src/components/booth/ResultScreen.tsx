@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { BoothSettings } from '@/types';
 import { drawQRCode } from '@/lib/booth/qr';
 import { downloadDataUrl } from '@/lib/booth/composite';
@@ -24,11 +24,30 @@ interface ResultScreenProps {
 
 export function ResultScreen({ settings, result, onRetake, onHome }: ResultScreenProps) {
   const qrCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(60);
+  const [isPaused, setIsPaused] = useState(false);
   const { toast } = useToast();
 
   const finalViewerUrl =
     result.viewerUrl ||
     (typeof window !== 'undefined' ? `${window.location.origin}/s/${result.sessionId}` : '');
+
+  // Auto-return timer to keep booth ready for next guest
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onHome();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isPaused, onHome]);
 
   useEffect(() => {
     if (qrCanvasRef.current && finalViewerUrl) {
@@ -138,12 +157,24 @@ export function ResultScreen({ settings, result, onRetake, onHome }: ResultScree
       </div>
 
       {/* Action Footer */}
-      <div className="flex gap-4 mt-4 mb-2">
-        <button onClick={onRetake} className="btn btn-primary btn-lg shadow-xl">
+      <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 mb-2">
+        <button onClick={onRetake} className="btn btn-primary btn-lg shadow-xl w-full sm:w-auto">
           Take More Photos 📸
         </button>
-        <button onClick={onHome} className="btn btn-secondary btn-lg">
+        <button onClick={onHome} className="btn btn-secondary btn-lg w-full sm:w-auto">
           Back to Start 🏠
+        </button>
+      </div>
+
+      {/* Auto-return timer note */}
+      <div className="text-[11px] text-zinc-400 flex items-center gap-2 mb-2">
+        <span>Returning to start in {secondsLeft}s</span>
+        <button
+          type="button"
+          onClick={() => setIsPaused((p) => !p)}
+          className="text-purple-300 hover:text-purple-200 underline font-medium"
+        >
+          {isPaused ? 'Resume timer' : 'Pause timer'}
         </button>
       </div>
     </div>
