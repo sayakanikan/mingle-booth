@@ -1,0 +1,39 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+export function AdminNav() {
+  const pathname = usePathname();
+
+  const navItems = [
+    { href: '/admin/camera', label: 'Camera', icon: '📷' },
+    { href: '/admin/branding', label: 'Branding', icon: '🎨' },
+    { href: '/admin/frames', label: 'Frames & Layout', icon: '🖼️' },
+    { href: '/admin/gallery', label: 'Gallery', icon: '🗂️' },
+    { href: '/admin/security', label: 'Security', icon: '🔒' },
+  ];
+
+  return (
+    <nav className="w-full md:w-60 bg-[#12121a]/90 backdrop-blur-md border-b md:border-b-0 md:border-r border-white/10 p-2.5 md:p-4 flex md:flex-col gap-1.5 md:gap-2 shrink-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      {navItems.map((item) => {
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-2.5 px-3.5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
+              isActive
+                ? 'bg-purple-600/25 text-purple-200 border border-purple-500/40 shadow-sm shadow-purple-500/10 font-semibold'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-white/5 border border-transparent'
+            }`}
+          >
+            <span className="text-base">{item.icon}</span>
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
