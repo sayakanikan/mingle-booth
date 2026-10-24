@@ -30,7 +30,7 @@ export default async function AdminLayout({
           <span className="text-xl">⚙️</span>
           <div>
             <h1 className="font-bold text-sm md:text-base text-zinc-100">Admin Dashboard</h1>
-            <p className="text-[10px] text-zinc-400 hidden sm:block">Mingle Booth Experience Manager</p>
+            <p className="text-[10px] text-zinc-400 hidden sm:block">Mingle Booth by Kala Kini Experience Manager</p>
           </div>
         </div>
 
@@ -39,7 +39,7 @@ export default async function AdminLayout({
             href="/"
             className="btn btn-secondary btn-sm text-xs px-2.5 sm:px-3"
             target="_blank"
-            title="Open Kiosk in new tab"
+            title="Open Mingle in new tab"
           >
             📸 <span className="hidden xs:inline">View</span> Booth
           </Link>

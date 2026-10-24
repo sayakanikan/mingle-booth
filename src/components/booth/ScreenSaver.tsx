@@ -10,11 +10,20 @@ interface ScreenSaverProps {
 }
 
 export function ScreenSaver({ settings, onStart }: ScreenSaverProps) {
+  const hasActiveEvent = settings.hasActiveEvent !== false;
   const hasActiveSlots = (settings.activeFrame?.slots?.length ?? 0) > 0;
+
+  const handleStart = () => {
+    if (!hasActiveEvent) {
+      window.location.href = '/admin/events';
+      return;
+    }
+    onStart();
+  };
 
   return (
     <div
-      onClick={onStart}
+      onClick={handleStart}
       className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer select-none overflow-hidden z-10"
     >
       {/* Background glow */}
@@ -76,32 +85,34 @@ export function ScreenSaver({ settings, onStart }: ScreenSaverProps) {
         </h1>
 
         <p className="text-xs sm:text-sm md:text-base tracking-[0.25em] uppercase font-light text-zinc-300/90 mt-1">
-          {settings.eventSubtitle || 'Capture Your Memories'}
+          {settings.eventSubtitle || 'by Kala Kini'}
         </p>
 
         {/* Start Tap prompt */}
-        <div className="mt-10 sm:mt-14 flex flex-col items-center gap-4 group">
-          <div
-            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-purple-400/60 flex items-center justify-center bg-gradient-to-tr from-purple-600/20 to-pink-500/20 backdrop-blur-xl group-hover:scale-105 transition-transform"
-            style={{ animation: 'ringPulse 2.8s ease-in-out infinite' }}
-          >
-            <span className="text-3xl sm:text-4xl group-hover:scale-110 transition-transform">📸</span>
-          </div>
-          <span className="text-xs sm:text-sm font-medium text-purple-200 tracking-widest uppercase">
+        <div className="mt-8 sm:mt-12 flex flex-col items-center">
+          <span className="text-xs sm:text-sm font-medium text-purple-200 tracking-widest uppercase animate-pulse">
             Touch Anywhere to Start
           </span>
         </div>
 
-        {/* Warning pill if no frame or frame has no slots */}
-        {!hasActiveSlots && (
+        {/* Warning pill if no event is active or no frame has slots */}
+        {!hasActiveEvent ? (
+          <Link
+            href="/admin/events"
+            onClick={(e) => e.stopPropagation()}
+            className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs font-medium hover:bg-amber-500/25 transition-all shadow-lg"
+          >
+            <span>⚠️ No active event selected · Click for Admin Events</span>
+          </Link>
+        ) : !hasActiveSlots ? (
           <Link
             href="/admin/frames"
             onClick={(e) => e.stopPropagation()}
             className="mt-6 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/35 text-amber-300 text-xs font-medium hover:bg-amber-500/25 transition-all shadow-lg"
           >
-            <span>⚠️ No active frame with slots · Click for Admin</span>
+            <span>⚠️ No active frame with slots · Click for Admin Frames</span>
           </Link>
-        )}
+        ) : null}
       </div>
     </div>
   );

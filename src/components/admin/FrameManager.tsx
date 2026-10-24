@@ -71,6 +71,14 @@ export function FrameManager({ settings }: FrameManagerProps) {
     }
   };
 
+  const [pendingUpload, setPendingUpload] = useState<{
+    fileName: string;
+    dataUrl: string;
+    width: number;
+    height: number;
+    format: '2R' | '4R';
+  } | null>(null);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -84,78 +92,98 @@ export function FrameManager({ settings }: FrameManagerProps) {
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
-      img.onload = async () => {
+      img.onload = () => {
         const width = img.naturalWidth;
         const height = img.naturalHeight;
+        const ratio = width / height;
+        // 2R photostrips are ~1:3 (0.33); 4R postcards are ~2:3 (0.67) or 3:2 (1.5)
+        const detectedFormat: '2R' | '4R' = ratio < 0.5 ? '2R' : '4R';
 
-        let detectedSlots: Slot[] = [];
-        try {
-          detectedSlots = await detectSlots(dataUrl);
-          toast(
-            detectedSlots.length
-              ? `Detected ${detectedSlots.length} slot(s) — adjust boundaries and save!`
-              : 'No transparent areas found — draw slots manually',
-            'info'
-          );
-        } catch (err) {
-          console.warn('detectSlots failed:', err);
-        }
-
-        const editor = createSlotEditor({
-          frameName: fileName,
-          frameDataUrl: dataUrl,
-          frameWidth: width,
-          frameHeight: height,
-          initialSlots: detectedSlots,
-          onSave: async (finalSlots) => {
-            let finalUrl = dataUrl;
-            if (isCloudinaryConfigured()) {
-              try {
-                const res = await uploadDataUrl(dataUrl, {
-                  subfolder: 'frames',
-                  publicIdHint: `frame_${Date.now()}`,
-                });
-                finalUrl = res.secure_url;
-              } catch (e) {
-                console.warn('Cloudinary upload fallback:', e);
-              }
-            }
-
-            const res = await addFrameAction({
-              name: fileName,
-              dataUrl: finalUrl,
-              width,
-              height,
-              slots: finalSlots,
-            });
-
-            if (res.success && res.frameId) {
-              const newFrame: Frame = {
-                id: res.frameId,
-                name: fileName,
-                dataUrl: finalUrl,
-                width,
-                height,
-                slots: finalSlots,
-                isActive: true,
-              };
-              setFrames((prev) => [...prev.map((f) => ({ ...f, isActive: false })), newFrame]);
-              setActiveFrameId(res.frameId);
-              toast('Frame saved & activated!', 'success');
-            } else {
-              toast('Failed to save frame: ' + res.error, 'error');
-            }
-          },
+        setPendingUpload({
+          fileName,
+          dataUrl,
+          width,
+          height,
+          format: detectedFormat,
         });
-
-        document.body.appendChild(editor.el);
-        editor.open();
         setUploading(false);
       };
       img.src = dataUrl;
     };
 
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!pendingUpload) return;
+    const { fileName, dataUrl, width, height, format } = pendingUpload;
+    setPendingUpload(null);
+    setUploading(true);
+
+    let detectedSlots: Slot[] = [];
+    try {
+      detectedSlots = await detectSlots(dataUrl);
+      toast(
+        detectedSlots.length
+          ? `Detected ${detectedSlots.length} slot(s) for ${format} frame!`
+          : 'No transparent areas found — draw slots manually',
+        'info'
+      );
+    } catch (err) {
+      console.warn('detectSlots failed:', err);
+    }
+
+    const editor = createSlotEditor({
+      frameName: `${fileName} (${format})`,
+      frameDataUrl: dataUrl,
+      frameWidth: width,
+      frameHeight: height,
+      initialSlots: detectedSlots,
+      onSave: async (finalSlots) => {
+        let finalUrl = dataUrl;
+        if (isCloudinaryConfigured()) {
+          try {
+            const res = await uploadDataUrl(dataUrl, {
+              subfolder: 'frames',
+              publicIdHint: `frame_${Date.now()}`,
+            });
+            finalUrl = res.secure_url;
+          } catch (e) {
+            console.warn('Cloudinary upload fallback:', e);
+          }
+        }
+
+        const res = await addFrameAction({
+          name: `${fileName} (${format})`,
+          dataUrl: finalUrl,
+          width,
+          height,
+          slots: finalSlots,
+        });
+
+        if (res.success && res.frameId) {
+          const newFrame: Frame = {
+            id: res.frameId,
+            name: `${fileName} (${format})`,
+            dataUrl: finalUrl,
+            width,
+            height,
+            slots: finalSlots,
+            isActive: true,
+          };
+          setFrames((prev) => [...prev.map((f) => ({ ...f, isActive: false })), newFrame]);
+          setActiveFrameId(res.frameId);
+          toast('Frame saved & activated!', 'success');
+        } else {
+          toast('Failed to save frame: ' + res.error, 'error');
+        }
+      },
+    });
+
+    document.body.appendChild(editor.el);
+    editor.open();
+    setUploading(false);
   };
 
   const handleActivate = async (frameId: string) => {
@@ -199,33 +227,42 @@ export function FrameManager({ settings }: FrameManagerProps) {
   };
 
   const handleEditSlots = (frame: Frame) => {
-    const editor = createSlotEditor({
-      frameName: frame.name,
-      frameDataUrl: frame.dataUrl,
-      frameWidth: frame.width || 1200,
-      frameHeight: frame.height || 3600,
-      initialSlots: frame.slots,
-      onSave: async (finalSlots) => {
-        try {
-          const res = await updateFrameSlotsAction(frame.id, {
-            slots: finalSlots,
-            width: frame.width || 1200,
-            height: frame.height || 3600,
-          });
-          if (res.success) {
-            setFrames((prev) =>
-              prev.map((f) => (f.id === frame.id ? { ...f, slots: finalSlots } : f))
-            );
-            toast('Slots updated successfully!', 'success');
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const width = frame.width || img.naturalWidth || 1200;
+      const height = frame.height || img.naturalHeight || 3600;
+      const editor = createSlotEditor({
+        frameName: frame.name,
+        frameDataUrl: frame.dataUrl,
+        frameWidth: width,
+        frameHeight: height,
+        initialSlots: frame.slots,
+        onSave: async (finalSlots) => {
+          try {
+            const res = await updateFrameSlotsAction(frame.id, {
+              slots: finalSlots,
+              width,
+              height,
+            });
+            if (res.success) {
+              setFrames((prev) =>
+                prev.map((f) =>
+                  f.id === frame.id ? { ...f, slots: finalSlots, width, height } : f
+                )
+              );
+              toast('Slots updated successfully!', 'success');
+            }
+          } catch (err: unknown) {
+            toast((err as Error).message, 'error');
           }
-        } catch (err: unknown) {
-          toast((err as Error).message, 'error');
-        }
-      },
-    });
+        },
+      });
 
-    document.body.appendChild(editor.el);
-    editor.open();
+      document.body.appendChild(editor.el);
+      editor.open();
+    };
+    img.src = frame.dataUrl;
   };
 
   return (
@@ -402,6 +439,81 @@ export function FrameManager({ settings }: FrameManagerProps) {
           </div>
         )}
       </div>
+
+      {/* 2R vs 4R Frame Size Selection Modal */}
+      {pendingUpload && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="glass-card max-w-md w-full p-6 rounded-3xl border border-white/10 flex flex-col gap-5 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📐</span>
+              <div>
+                <h3 className="text-lg font-bold">Confirm Frame Size</h3>
+                <p className="text-xs text-zinc-400">
+                  Select standard print format for &quot;{pendingUpload.fileName}&quot;
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center p-2 rounded-2xl bg-black/60 border border-white/10 max-h-40 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pendingUpload.dataUrl}
+                alt="Uploaded frame preview"
+                className="max-h-36 max-w-full object-contain"
+              />
+            </div>
+
+            <div className="text-xs text-zinc-300">
+              Original Resolution: <span className="font-semibold text-purple-300">{pendingUpload.width} × {pendingUpload.height} px</span> (No distortion)
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setPendingUpload((prev) => prev ? { ...prev, format: '2R' } : null)}
+                className={`p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all ${
+                  pendingUpload.format === '2R'
+                    ? 'border-purple-400 bg-purple-500/20 shadow-md ring-1 ring-purple-400'
+                    : 'border-white/10 bg-white/5 hover:border-white/20'
+                }`}
+              >
+                <span className="font-bold text-sm text-white">2R Photostrip</span>
+                <span className="text-[11px] text-zinc-400">2&quot; × 6&quot; Vertical Strip (1:3 aspect)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPendingUpload((prev) => prev ? { ...prev, format: '4R' } : null)}
+                className={`p-3.5 rounded-2xl border text-left flex flex-col gap-1 transition-all ${
+                  pendingUpload.format === '4R'
+                    ? 'border-purple-400 bg-purple-500/20 shadow-md ring-1 ring-purple-400'
+                    : 'border-white/10 bg-white/5 hover:border-white/20'
+                }`}
+              >
+                <span className="font-bold text-sm text-white">4R Postcard</span>
+                <span className="text-[11px] text-zinc-400">4&quot; × 6&quot; Photo Card (2:3 aspect)</span>
+              </button>
+            </div>
+
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button"
+                onClick={handleConfirmUpload}
+                className="btn btn-primary btn-sm flex-1 text-xs py-2.5"
+              >
+                Continue to Slot Editor
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingUpload(null)}
+                className="btn btn-secondary btn-sm px-4 text-xs"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

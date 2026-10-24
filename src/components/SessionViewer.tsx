@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 
 interface SessionViewerProps {
@@ -12,144 +12,180 @@ interface SessionViewerProps {
 }
 
 export function SessionViewer({
-  title = 'Mingle Booth',
+  title = 'Mingle Booth by Kala Kini',
   stripUrl,
   gifUrl,
   originalUrls = [],
-  isCloud = true,
 }: SessionViewerProps) {
   const { toast } = useToast();
+  const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
 
-  const handleShare = async () => {
-    if (typeof navigator !== 'undefined' && navigator.share && stripUrl) {
+  const downloadAsset = async (url: string, filename: string) => {
+    try {
+      setDownloadingUrl(url);
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+      toast('Download started!', 'success');
+    } catch {
+      window.open(url, '_blank');
+    } finally {
+      setDownloadingUrl(null);
+    }
+  };
+
+  const handleShare = async (urlToShare?: string) => {
+    const url = urlToShare || stripUrl;
+    if (!url) return;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title,
           text: `Check out our photobooth photos from ${title}!`,
-          url: stripUrl,
+          url,
         });
       } catch {
         // Share dismissed
       }
-    } else if (stripUrl) {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(stripUrl);
-        toast('Link copied to clipboard!', 'success');
-      }
+    } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(url);
+      toast('Link copied to clipboard!', 'success');
     }
   };
 
   const hasPhotos = !!stripUrl || !!gifUrl || originalUrls.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-[#f1f0ff] flex flex-col items-center py-10 px-4 md:px-8 gap-8 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#0a0a0f] text-[#f1f0ff] flex flex-col items-center py-6 px-3 sm:px-6 font-sans overflow-x-hidden">
       {/* Header */}
-      <div className="flex flex-col items-center text-center gap-2 max-w-lg">
-        <h1 className="text-3xl md:text-5xl font-bold text-hero-gradient font-sans">
+      <div className="flex flex-col items-center text-center gap-1.5 max-w-md w-full mb-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-hero-gradient font-sans">
           📸 {title}
         </h1>
-        <p className="text-xs md:text-sm text-zinc-400 tracking-wide">
+        <p className="text-xs text-zinc-400">
           Your photo session memories
         </p>
-        {isCloud && (
-          <span className="mt-1 text-xs px-3 py-1 rounded-full bg-sky-500/15 border border-sky-400/30 text-sky-300 font-medium">
-            ☁️ Stored in Cloud
-          </span>
-        )}
       </div>
 
       {!hasPhotos && (
-        <div className="my-auto text-center p-8 glass rounded-3xl max-w-sm">
+        <div className="my-auto text-center p-8 glass rounded-3xl max-w-sm mt-8">
           <p className="text-zinc-400 text-sm">
             No photos found in this session yet. Visit the booth to take some photos!
           </p>
         </div>
       )}
 
-      {/* Photo Strip Section */}
-      {stripUrl && (
-        <section className="w-full max-w-md flex flex-col items-center gap-3">
-          <span className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
-            Photo Strip
-          </span>
-          <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={stripUrl} alt="Photo Strip" className="w-full h-auto block" />
-          </div>
-          <div className="flex gap-3 w-full mt-2">
-            <a
-              href={stripUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={!isCloud ? `${title}-strip.jpg` : undefined}
-              className="btn btn-primary btn-sm flex-1 text-center"
-            >
-              ⬇ Download Strip
-            </a>
-            <button onClick={handleShare} className="btn btn-secondary btn-sm px-4">
-              ↗ Share
-            </button>
-          </div>
-        </section>
-      )}
-
-      {/* Animated GIF Section */}
-      {gifUrl && (
-        <section className="w-full max-w-md flex flex-col items-center gap-3 mt-4">
-          <div className="w-full h-px bg-white/10 mb-4" />
-          <span className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
-            Animated GIF
-          </span>
-          <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={gifUrl} alt="Animated GIF" className="w-full h-auto block" />
-          </div>
-          <a
-            href={gifUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            download={!isCloud ? `${title}-animated.gif` : undefined}
-            className="btn btn-secondary btn-sm w-full text-center mt-2"
-          >
-            ⬇ Download GIF
-          </a>
-        </section>
-      )}
-
-      {/* Originals Grid */}
-      {originalUrls.length > 0 && (
-        <section className="w-full max-w-xl flex flex-col items-center gap-3 mt-4">
-          <div className="w-full h-px bg-white/10 mb-4" />
-          <span className="text-xs uppercase tracking-widest text-zinc-400 font-semibold">
-            Original Photos ({originalUrls.length})
-          </span>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
-            {originalUrls.map((url, i) => (
-              <a
-                key={i}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative aspect-4/3 rounded-xl overflow-hidden border border-white/10 shadow-md bg-black transition-transform hover:scale-[1.02]"
-              >
+      {hasPhotos && (
+        <div className="w-full max-w-4xl flex flex-col md:flex-row items-center md:items-start justify-center gap-6">
+          {/* Column 1: Photo Strip */}
+          {stripUrl && (
+            <div className="w-full max-w-sm flex flex-col items-center gap-3">
+              <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold self-start sm:self-center">
+                🎞️ Photo Strip
+              </span>
+              <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black flex items-center justify-center p-1.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={url}
-                  alt={`Photo ${i + 1}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover"
+                  src={stripUrl}
+                  alt="Photo Strip"
+                  className="w-full h-auto max-h-[70vh] object-contain rounded-xl block"
                 />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-xs font-semibold">
-                  Open ↗
+              </div>
+              <div className="flex gap-2.5 w-full">
+                <button
+                  type="button"
+                  disabled={downloadingUrl === stripUrl}
+                  onClick={() => downloadAsset(stripUrl, `photo-strip.jpg`)}
+                  className="btn btn-primary btn-sm flex-1 text-center text-xs py-2.5"
+                >
+                  {downloadingUrl === stripUrl ? '⏳ Downloading…' : '⬇ Download Strip'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShare(stripUrl)}
+                  className="btn btn-secondary btn-sm px-4 text-xs"
+                >
+                  ↗ Share
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Column 2: Animated GIF & Single Photos */}
+          <div className="w-full max-w-md flex flex-col gap-6">
+            {/* Animated GIF Card */}
+            {gifUrl && (
+              <div className="w-full flex flex-col gap-2.5">
+                <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+                  🎬 Animated GIF
+                </span>
+                <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-white/10 bg-black flex items-center justify-center p-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={gifUrl}
+                    alt="Animated GIF"
+                    className="w-full h-auto max-h-[40vh] object-contain rounded-xl block"
+                  />
                 </div>
-              </a>
-            ))}
+                <button
+                  type="button"
+                  disabled={downloadingUrl === gifUrl}
+                  onClick={() => downloadAsset(gifUrl, `animated-photo.gif`)}
+                  className="btn btn-secondary btn-sm w-full text-xs py-2"
+                >
+                  {downloadingUrl === gifUrl ? '⏳ Downloading…' : '⬇ Download GIF'}
+                </button>
+              </div>
+            )}
+
+            {/* Single Photos Grid */}
+            {originalUrls.length > 0 && (
+              <div className="w-full flex flex-col gap-2.5">
+                <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+                  📷 Individual Photos ({originalUrls.length})
+                </span>
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  {originalUrls.map((url, i) => (
+                    <div
+                      key={i}
+                      className="flex flex-col gap-1.5 p-2 rounded-2xl bg-white/5 border border-white/10 shadow-sm"
+                    >
+                      <div className="relative aspect-4/3 rounded-xl overflow-hidden bg-black">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Photo ${i + 1}`}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        disabled={downloadingUrl === url}
+                        onClick={() => downloadAsset(url, `photo-${i + 1}.jpg`)}
+                        className="btn btn-secondary btn-sm text-[11px] py-1.5 w-full"
+                      >
+                        {downloadingUrl === url ? '⏳ Saving…' : `⬇ Save Photo ${i + 1}`}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        </section>
+        </div>
       )}
 
-      <footer className="mt-8 text-xs text-zinc-600">
-        Powered by Mingle Booth
+      <footer className="mt-10 pb-4 text-[11px] text-zinc-500 text-center">
+        Powered by Mingle Booth by Kala Kini
       </footer>
     </div>
   );

@@ -3,27 +3,16 @@ import { BoothSettings, Frame, Slot } from '@/types';
 
 export async function getBoothSettings(): Promise<BoothSettings> {
   try {
-    let event = await prisma.event.findUnique({
-      where: { id: 'default' },
-      include: {
-        frames: {
-          orderBy: { createdAt: 'asc' },
-        },
-      },
+    const activeEvent = await prisma.event.findFirst({
+      where: { isActive: true },
     });
 
-    if (!event) {
-      event = await prisma.event.create({
-        data: { id: 'default' },
-        include: {
-          frames: {
-            orderBy: { createdAt: 'asc' },
-          },
-        },
-      });
-    }
+    // Shared frames library - all frames available across events
+    const framesRecords = await prisma.frame.findMany({
+      orderBy: { createdAt: 'asc' },
+    });
 
-    const frames: Frame[] = (event.frames || []).map((f) => ({
+    const frames: Frame[] = framesRecords.map((f) => ({
       id: f.id,
       name: f.name,
       dataUrl: f.dataUrl,
@@ -35,29 +24,56 @@ export async function getBoothSettings(): Promise<BoothSettings> {
 
     const activeFrame = frames.find((f) => f.isActive) || null;
 
+    if (!activeEvent) {
+      return {
+        eventId: null,
+        hasActiveEvent: false,
+        cameraDeviceId: null,
+        cameraResolution: '1920x1080',
+        mirrorCamera: true,
+        mirrorResult: true,
+        eventTitle: 'No Active Event',
+        eventSubtitle: 'Please activate an event in Admin',
+        brandLogoDataUrl: null,
+        stripLayout: '3v',
+        stripBgColor: '#1a1a28',
+        stripTextColor: '#ffffff',
+        stripShowTitle: true,
+        stripShowDate: true,
+        activeFrame,
+        frames,
+      };
+    }
+
     return {
-      cameraDeviceId: event.cameraDeviceId,
-      cameraResolution: event.cameraResolution,
-      mirrorCamera: event.mirrorCamera,
-      eventTitle: event.title,
-      eventSubtitle: event.subtitle,
-      brandLogoDataUrl: event.brandLogoUrl,
-      stripLayout: event.defaultLayout,
-      stripBgColor: event.stripBgColor,
-      stripTextColor: event.stripTextColor,
-      stripShowTitle: event.stripShowTitle,
-      stripShowDate: event.stripShowDate,
+      eventId: activeEvent.id,
+      hasActiveEvent: true,
+      cameraDeviceId: activeEvent.cameraDeviceId,
+      cameraResolution: activeEvent.cameraResolution,
+      mirrorCamera: activeEvent.mirrorCamera,
+      mirrorResult: activeEvent.mirrorResult ?? true,
+      eventTitle: activeEvent.title,
+      eventSubtitle: activeEvent.subtitle,
+      brandLogoDataUrl: activeEvent.brandLogoUrl,
+      stripLayout: activeEvent.defaultLayout,
+      stripBgColor: activeEvent.stripBgColor,
+      stripTextColor: activeEvent.stripTextColor,
+      stripShowTitle: activeEvent.stripShowTitle,
+      stripShowDate: activeEvent.stripShowDate,
       activeFrame,
       frames,
     };
   } catch (err) {
     console.error('Failed to load settings from DB:', err);
     return {
+      eventId: null,
+      hasActiveEvent: false,
       cameraDeviceId: null,
       cameraResolution: '1920x1080',
       mirrorCamera: true,
+      mirrorResult: true,
       eventTitle: 'Mingle Booth',
-      eventSubtitle: 'Capture Your Memories',
+      eventSubtitle: 'by Kala Kini',
       brandLogoDataUrl: null,
       stripLayout: '3v',
       stripBgColor: '#1a1a28',

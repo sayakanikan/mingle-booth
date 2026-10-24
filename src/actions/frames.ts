@@ -18,13 +18,16 @@ export async function addFrameAction(params: {
   try {
     const result = await prisma.$transaction(async (tx) => {
       await tx.frame.updateMany({
-        where: { eventId: 'default' },
         data: { isActive: false },
       });
 
+      // Get first event to associate or fallback to default
+      const defaultEvent = await tx.event.findFirst();
+      const targetEventId = defaultEvent?.id || 'default';
+
       const frame = await tx.frame.create({
         data: {
-          eventId: 'default',
+          eventId: targetEventId,
           name: params.name,
           dataUrl: params.dataUrl,
           width: params.width ?? null,
@@ -51,7 +54,6 @@ export async function activateFrameAction(frameId: string): Promise<{ success: b
   try {
     await prisma.$transaction([
       prisma.frame.updateMany({
-        where: { eventId: 'default' },
         data: { isActive: false },
       }),
       prisma.frame.update({
@@ -73,7 +75,6 @@ export async function clearActiveFrameAction(): Promise<{ success: boolean; erro
 
   try {
     await prisma.frame.updateMany({
-      where: { eventId: 'default' },
       data: { isActive: false },
     });
 

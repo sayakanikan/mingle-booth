@@ -15,6 +15,7 @@ export function CameraForm({ settings }: CameraFormProps) {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>(settings.cameraDeviceId || '');
   const [resolution, setResolution] = useState<string>(settings.cameraResolution || '1920x1080');
   const [mirror, setMirror] = useState<boolean>(settings.mirrorCamera !== false);
+  const [mirrorResult, setMirrorResult] = useState<boolean>(settings.mirrorResult !== false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -62,6 +63,7 @@ export function CameraForm({ settings }: CameraFormProps) {
         cameraDeviceId: selectedDeviceId || null,
         cameraResolution: resolution,
         mirrorCamera: mirror,
+        mirrorResult,
       });
       if (res.success) {
         toast('Camera settings saved!', 'success');
@@ -134,24 +136,44 @@ export function CameraForm({ settings }: CameraFormProps) {
           </select>
         </div>
 
-        {/* Mirror Toggle Card */}
-        <label htmlFor="mirrorCamera" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
-          <input
-            type="checkbox"
-            id="mirrorCamera"
-            checked={mirror}
-            onChange={(e) => setMirror(e.target.checked)}
-            className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 bg-white/10 border-white/20 cursor-pointer"
-          />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-zinc-200">
-              Mirror Camera Preview
-            </span>
-            <span className="text-xs text-zinc-400">
-              Horizontal flip for intuitive selfie positioning
-            </span>
-          </div>
-        </label>
+        {/* Mirror Settings Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <label htmlFor="mirrorCamera" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+            <input
+              type="checkbox"
+              id="mirrorCamera"
+              checked={mirror}
+              onChange={(e) => setMirror(e.target.checked)}
+              className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 bg-white/10 border-white/20 cursor-pointer"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-zinc-200">
+                Mirror Live Preview
+              </span>
+              <span className="text-xs text-zinc-400">
+                Horizontal flip on kiosk screen for intuitive posing
+              </span>
+            </div>
+          </label>
+
+          <label htmlFor="mirrorResult" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+            <input
+              type="checkbox"
+              id="mirrorResult"
+              checked={mirrorResult}
+              onChange={(e) => setMirrorResult(e.target.checked)}
+              className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 bg-white/10 border-white/20 cursor-pointer"
+            />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold text-zinc-200">
+                Mirror Picture Result
+              </span>
+              <span className="text-xs text-zinc-400">
+                Save captured photo strip with flipped selfie orientation
+              </span>
+            </div>
+          </label>
+        </div>
 
         {/* Test Video Preview Area */}
         <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
@@ -160,7 +182,7 @@ export function CameraForm({ settings }: CameraFormProps) {
               <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
                 Live Preview Feed
               </span>
-              <p className="text-[11px] text-zinc-400">Verify orientation, lighting, and framing</p>
+              <p className="text-[11px] text-zinc-400">Full uncropped camera view with sensor framing</p>
             </div>
             <button
               type="button"
@@ -173,18 +195,18 @@ export function CameraForm({ settings }: CameraFormProps) {
             </button>
           </div>
 
-          <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden bg-black/80 border border-white/10 flex items-center justify-center shadow-inner">
+          <div className="relative w-full aspect-video max-h-[480px] rounded-2xl overflow-hidden bg-black border border-white/10 flex items-center justify-center shadow-inner">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               style={{ transform: mirror ? 'scaleX(-1)' : 'none' }}
             />
             {!testing && (
-              <div className="text-center p-4">
-                <span className="text-2xl block mb-1 opacity-60">📷</span>
+              <div className="text-center p-6">
+                <span className="text-3xl block mb-2 opacity-60">📷</span>
                 <span className="text-xs text-zinc-400">Click &quot;Test Camera&quot; to preview live feed</span>
               </div>
             )}

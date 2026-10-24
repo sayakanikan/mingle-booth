@@ -7,14 +7,17 @@ import { useToast } from '@/components/ui/Toast';
 
 interface GalleryGridProps {
   initialSessions: SessionData[];
+  eventId?: string;
+  eventName?: string;
+  eventSubtitle?: string;
 }
 
-export function GalleryGrid({ initialSessions }: GalleryGridProps) {
+export function GalleryGrid({ initialSessions, eventId, eventName, eventSubtitle }: GalleryGridProps) {
   const [sessions, setSessions] = useState<SessionData[]>(initialSessions);
   const { toast } = useToast();
 
   const handleDelete = async (sessionId: string) => {
-    if (!confirm('Delete this photo session?')) return;
+    if (!confirm('Delete this photo session? This will remove photos from cloud storage.')) return;
     try {
       const res = await deleteSessionAction(sessionId);
       if (res.success) {
@@ -29,12 +32,16 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
   };
 
   const handleClearAll = async () => {
-    if (!confirm('Are you sure you want to delete ALL sessions? This cannot be undone.')) return;
+    const confirmText = eventName
+      ? `Are you sure you want to delete ALL sessions for "${eventName}"? This cannot be undone.`
+      : 'Are you sure you want to delete ALL sessions? This cannot be undone.';
+    if (!confirm(confirmText)) return;
+
     try {
-      const res = await clearSessionsAction();
+      const res = await clearSessionsAction(eventId);
       if (res.success) {
         setSessions([]);
-        toast('All sessions cleared', 'info');
+        toast('All sessions cleared for this event', 'info');
       } else {
         toast('Error: ' + res.error, 'error');
       }
@@ -45,24 +52,41 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
 
   return (
     <div className="flex flex-col gap-8 pb-10">
+      {/* Back button if in event detail */}
+      {eventId && (
+        <div>
+          <a
+            href="/admin/events"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-purple-300 hover:text-white transition-colors"
+          >
+            <span>←</span>
+            <span>Back to All Events</span>
+          </a>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Photo Session Gallery</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">
+            {eventName ? `${eventName} — Gallery` : 'Photo Session Gallery'}
+          </h2>
           <p className="text-sm text-zinc-400 mt-1.5">
-            Browse and download photo strips captured by guests in real time.
+            {eventSubtitle
+              ? `${eventSubtitle} · Browse and download photo strips captured by guests.`
+              : 'Browse and download photo strips captured by guests in real time.'}
           </p>
         </div>
 
         {sessions.length > 0 && (
           <button onClick={handleClearAll} className="btn btn-danger btn-sm text-xs px-4 py-2 self-start sm:self-auto shadow-lg">
-            🗑️ Clear All ({sessions.length})
+            🗑️ Clear Event Photos ({sessions.length})
           </button>
         )}
       </div>
 
       {sessions.length === 0 ? (
         <div className="p-14 text-center text-zinc-400 text-sm glass rounded-3xl border border-white/10">
-          No photo sessions captured yet. Launch the booth kiosk and take some photos!
+          No photo sessions captured yet. Launch the mingle booth and take some photos!
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">

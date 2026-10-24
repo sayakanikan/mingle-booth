@@ -10,7 +10,7 @@ datasource db {
 model Event {
   id                String         @id @default("default")
   title             String         @default("Mingle Booth")
-  subtitle          String         @default("Capture Your Memories")
+  subtitle          String         @default("by Kala Kini")
   brandLogoUrl      String?        @map("brand_logo_data_url")
   stripBgColor      String         @default("#1a1a28") @map("strip_bg_color")
   stripTextColor    String         @default("#ffffff") @map("strip_text_color")
@@ -22,11 +22,14 @@ model Event {
   cameraDeviceId    String?        @map("camera_device_id")
   cameraResolution  String         @default("1920x1080") @map("camera_resolution")
   mirrorCamera      Boolean        @default(true) @map("mirror_camera")
+  mirrorResult      Boolean        @default(true) @map("mirror_result")
+  isActive          Boolean        @default(false) @map("is_active")
   createdAt         DateTime       @default(now()) @map("created_at") @db.Timestamptz
   updatedAt         DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   frames            Frame[]
   sessions          PhotoSession[]
 
+  @@index([isActive], map: "events_is_active_idx")
   @@map("events")
 }
 

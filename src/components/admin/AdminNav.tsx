@@ -8,17 +8,17 @@ export function AdminNav() {
   const pathname = usePathname();
 
   const navItems = [
+    { href: '/admin/events', label: 'Events & Gallery', icon: '🎉' },
     { href: '/admin/camera', label: 'Camera', icon: '📷' },
     { href: '/admin/branding', label: 'Branding', icon: '🎨' },
     { href: '/admin/frames', label: 'Frames & Layout', icon: '🖼️' },
-    { href: '/admin/gallery', label: 'Gallery', icon: '🗂️' },
     { href: '/admin/security', label: 'Security', icon: '🔒' },
   ];
 
   return (
     <nav className="w-full md:w-60 bg-[#12121a]/90 backdrop-blur-md border-b md:border-b-0 md:border-r border-white/10 p-2.5 md:p-4 flex md:flex-col gap-1.5 md:gap-2 shrink-0 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
       {navItems.map((item) => {
-        const isActive = pathname === item.href;
+        const isActive = pathname === item.href || (item.href === '/admin/events' && pathname.startsWith('/admin/events'));
         return (
           <Link
             key={item.href}

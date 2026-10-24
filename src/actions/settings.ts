@@ -15,6 +15,7 @@ export async function updateSettingsAction(patch: Partial<BoothSettings>): Promi
     if (patch.cameraDeviceId !== undefined) data.cameraDeviceId = patch.cameraDeviceId;
     if (patch.cameraResolution !== undefined) data.cameraResolution = patch.cameraResolution;
     if (patch.mirrorCamera !== undefined) data.mirrorCamera = patch.mirrorCamera;
+    if (patch.mirrorResult !== undefined) data.mirrorResult = patch.mirrorResult;
     if (patch.eventTitle !== undefined) data.title = patch.eventTitle;
     if (patch.eventSubtitle !== undefined) data.subtitle = patch.eventSubtitle;
     if (patch.brandLogoDataUrl !== undefined) data.brandLogoUrl = patch.brandLogoDataUrl;
@@ -24,14 +25,20 @@ export async function updateSettingsAction(patch: Partial<BoothSettings>): Promi
     if (patch.stripShowTitle !== undefined) data.stripShowTitle = patch.stripShowTitle;
     if (patch.stripShowDate !== undefined) data.stripShowDate = patch.stripShowDate;
 
+    const activeEvent = await prisma.event.findFirst({
+      where: { isActive: true },
+    });
+    const targetId = activeEvent?.id || 'default';
+
     await prisma.event.upsert({
-      where: { id: 'default' },
-      create: { id: 'default', ...data },
+      where: { id: targetId },
+      create: { id: targetId, isActive: true, ...data },
       update: data,
     });
 
     revalidatePath('/');
     revalidatePath('/admin');
+    revalidatePath('/admin/events');
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: (err as Error).message };

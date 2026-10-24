@@ -16,10 +16,22 @@ export interface Frame {
   isActive?: boolean;
 }
 
+export interface EventData {
+  id: string;
+  title: string;
+  subtitle: string;
+  isActive: boolean;
+  createdAt: string;
+  sessionCount?: number;
+}
+
 export interface BoothSettings {
+  eventId?: string | null;
+  hasActiveEvent?: boolean;
   cameraDeviceId: string | null;
   cameraResolution: string;
   mirrorCamera: boolean;
+  mirrorResult?: boolean;
   eventTitle: string;
   eventSubtitle: string;
   brandLogoDataUrl: string | null;

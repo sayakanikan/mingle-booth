@@ -93,7 +93,7 @@ export default function AdminLoginPage() {
 
         <Link href="/" className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1">
           <span>←</span>
-          <span>Return to Kiosk</span>
+          <span>Return to Mingle</span>
         </Link>
       </div>
     </div>

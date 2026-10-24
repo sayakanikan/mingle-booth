@@ -11,71 +11,102 @@ interface CaptureScreenProps {
   settings: BoothSettings;
   onComplete: (photos: HTMLCanvasElement[]) => void;
   onCancel: () => void;
+  targetSlotIndex?: number | null;
 }
 
 const RING_CIRCUMFERENCE = 314; // 2 * π * 50
 
-export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenProps) {
+const COUNTDOWN_SECONDS = 5;
+
+export function CaptureScreen({
+  settings,
+  onComplete,
+  onCancel,
+  targetSlotIndex,
+}: CaptureScreenProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
 
-  const [currentShot, setCurrentShot] = useState(0);
+  const isRetake = targetSlotIndex !== undefined && targetSlotIndex !== null;
+
+  const [currentShot, setCurrentShot] = useState(isRetake ? targetSlotIndex : 0);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [countdownMax, setCountdownMax] = useState<number>(4);
+  const [countdownMax, setCountdownMax] = useState<number>(COUNTDOWN_SECONDS);
   const [intermission, setIntermission] = useState<string | null>(null);
   const [capturedThumbs, setCapturedThumbs] = useState<string[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  const activeSlots = settings.activeFrame?.slots || [];
-  const sortedSlots = [...activeSlots].sort((a, b) => a.slot_index - b.slot_index);
+  // Memoize slots to prevent generating a new array reference on every render
+  const sortedSlots = React.useMemo(() => {
+    const activeSlots = settings.activeFrame?.slots || [];
+    return [...activeSlots].sort((a, b) => a.slot_index - b.slot_index);
+  }, [settings.activeFrame?.slots]);
+
   const totalShots = sortedSlots.length;
+
+  // Stable refs for props to avoid re-triggering effects during countdown re-renders
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const sortedSlotsRef = useRef(sortedSlots);
+  sortedSlotsRef.current = sortedSlots;
+
+  const targetSlotRef = useRef(targetSlotIndex);
+  targetSlotRef.current = targetSlotIndex;
 
   const capturedCanvasesRef = useRef<HTMLCanvasElement[]>([]);
   const isRunningRef = useRef(false);
+  const sequenceStartedRef = useRef(false);
 
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const runSequence = useCallback(async () => {
-    if (isRunningRef.current || totalShots === 0) return;
+    if (isRunningRef.current || sortedSlotsRef.current.length === 0) return;
     isRunningRef.current = true;
     capturedCanvasesRef.current = [];
 
     await sleep(600);
 
-    for (let shot = 0; shot < totalShots; shot++) {
+    const shots = sortedSlotsRef.current;
+    const numShots = shots.length;
+    const retakeIdx = targetSlotRef.current;
+    const retaking = retakeIdx !== undefined && retakeIdx !== null;
+    const startIndex = retaking ? retakeIdx : 0;
+    const endIndex = retaking ? retakeIdx + 1 : numShots;
+
+    for (let shot = startIndex; shot < endIndex; shot++) {
       if (!isRunningRef.current) return;
 
-      const slot = sortedSlots[shot];
+      const slot = shots[shot];
       setActiveSlot(slot);
       setCurrentShot(shot);
       setIntermission(null);
+      setCountdownMax(COUNTDOWN_SECONDS);
 
-      // Shot 1 gets 4 seconds to prepare; subsequent shots get 3 seconds
-      const seconds = shot === 0 ? 4 : 3;
-      setCountdownMax(seconds);
-
-      for (let n = seconds; n >= 1; n--) {
+      // Consistent 5-second countdown on every shot
+      for (let n = COUNTDOWN_SECONDS; n >= 1; n--) {
         if (!isRunningRef.current) return;
         setCountdown(n);
-        if (n > 1) {
-          playCountdownBeep();
-        } else {
-          playGoBeep();
-        }
+        playCountdownBeep();
         await sleep(1000);
       }
 
       if (!isRunningRef.current) return;
 
-      // Smile state — give guests 750ms to freeze and smile
+      // Smile & Go state — trigger go chime and visual prompt
       setCountdown(0);
-      await sleep(750);
+      playGoBeep();
+      await sleep(300);
 
       if (!isRunningRef.current || !videoRef.current) return;
 
-      // Capture frame
-      const canvas = captureFrame(videoRef.current, settings.mirrorCamera !== false);
+      // Capture frame using mirrorResult setting
+      const mirror = settingsRef.current.mirrorResult !== false;
+      const canvas = captureFrame(videoRef.current, mirror);
       capturedCanvasesRef.current.push(canvas);
 
       // Flash & shutter sound
@@ -86,10 +117,11 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
       }
 
       setCapturedThumbs((prev) => [...prev, canvas.toDataURL('image/jpeg', 0.5)]);
+      await sleep(500);
       setCountdown(null);
 
-      if (shot < totalShots - 1) {
-        setIntermission(`Shot ${shot + 1} of ${totalShots} saved! Get ready…`);
+      if (!retaking && shot < numShots - 1) {
+        setIntermission(`Shot ${shot + 1} of ${numShots} saved! Get ready…`);
         await sleep(1400);
         setIntermission(null);
       }
@@ -100,20 +132,24 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
     playSuccess();
     await sleep(600);
     isRunningRef.current = false;
-    onComplete(capturedCanvasesRef.current);
-  }, [totalShots, sortedSlots, settings.mirrorCamera, onComplete]);
+    onCompleteRef.current(capturedCanvasesRef.current);
+  }, []); // Stable callback, uses refs
 
   useEffect(() => {
     let active = true;
 
     async function init() {
-      if (totalShots === 0) return;
+      if (totalShots === 0 || settings.hasActiveEvent === false) return;
       try {
         const stream = await startCamera(settings.cameraDeviceId, settings.cameraResolution);
         if (!active || !videoRef.current) return;
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
-        runSequence();
+
+        if (!sequenceStartedRef.current) {
+          sequenceStartedRef.current = true;
+          runSequence();
+        }
       } catch (err: unknown) {
         if (active) {
           setCameraError((err as Error).message);
@@ -126,15 +162,39 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
     return () => {
       active = false;
       isRunningRef.current = false;
+      sequenceStartedRef.current = false;
       stopCamera();
     };
-  }, [settings.cameraDeviceId, settings.cameraResolution, totalShots, runSequence]);
+  }, [settings.cameraDeviceId, settings.cameraResolution, totalShots, runSequence, settings.hasActiveEvent]);
 
   const handleCancel = () => {
     isRunningRef.current = false;
+    sequenceStartedRef.current = false;
     stopCamera();
     onCancel();
   };
+
+  if (settings.hasActiveEvent === false) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center p-6 z-20">
+        <div className="glass-card max-w-md w-full p-8 rounded-3xl text-center flex flex-col items-center gap-4">
+          <span className="text-5xl">🎉</span>
+          <h2 className="text-2xl font-bold">Event Setup Required</h2>
+          <p className="text-zinc-400 text-sm">
+            No active event is selected. Please activate an event in the Admin dashboard to start taking photos.
+          </p>
+          <div className="flex gap-3 mt-4">
+            <Link href="/admin/events" className="btn btn-primary btn-sm">
+              ⚙ Open Events Admin
+            </Link>
+            <button onClick={handleCancel} className="btn btn-secondary btn-sm">
+              🏠 Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (totalShots === 0) {
     return (
@@ -194,23 +254,23 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
 
           {/* Aspect ratio badge */}
           {activeSlot && (
-            <div className="absolute top-3 left-3 md:top-4 md:left-4 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] md:text-xs font-medium text-white/80 border border-white/10">
+            <div className="absolute top-3 left-3 md:top-4 md:left-4 z-10 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] md:text-xs font-medium text-white/80 border border-white/10">
               {formatAspectRatio(activeSlot.w, activeSlot.h)}
             </div>
           )}
 
-          {/* Countdown timer overlay */}
+          {/* Countdown timer - positioned in top-right corner so it never blocks the live preview */}
           {countdown !== null && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/30 backdrop-blur-[2px]">
-              <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 108 108">
+            <div className="absolute top-3 right-3 md:top-4 md:right-4 z-20 pointer-events-none flex flex-col items-center">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center bg-black/65 backdrop-blur-md rounded-full border border-white/15 shadow-2xl ring-2 ring-purple-500/40">
+                <svg className="w-full h-full -rotate-90 p-1" viewBox="0 0 108 108">
                   <circle
                     cx="54"
                     cy="54"
                     r="50"
                     fill="none"
-                    stroke="rgba(255,255,255,0.2)"
-                    strokeWidth="6"
+                    stroke="rgba(255,255,255,0.15)"
+                    strokeWidth="7"
                   />
                   <circle
                     cx="54"
@@ -218,7 +278,7 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
                     r="50"
                     fill="none"
                     stroke={countdown === 0 ? '#34d399' : '#c084fc'}
-                    strokeWidth="7"
+                    strokeWidth="8"
                     strokeDasharray={RING_CIRCUMFERENCE}
                     strokeDashoffset={strokeOffset}
                     strokeLinecap="round"
@@ -227,23 +287,23 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
                 </svg>
                 <span
                   key={countdown}
-                  className="animate-counter-tick absolute font-bold text-5xl md:text-6xl text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]"
+                  className="animate-counter-tick absolute font-bold text-2xl sm:text-3xl md:text-4xl text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)]"
                 >
-                  {countdown === 0 ? '😊' : countdown}
+                  {countdown === 0 ? '📸' : countdown}
                 </span>
               </div>
-              <div className="mt-4 px-5 py-2 rounded-full bg-black/75 backdrop-blur-md text-sm md:text-base font-semibold text-purple-200 border border-purple-400/30 shadow-xl">
+              <div className="mt-1.5 px-3 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[11px] md:text-xs font-semibold text-purple-200 border border-purple-400/30 shadow-lg">
                 {countdown === 0 ? 'SMILE! 📸' : 'Get ready...'}
               </div>
             </div>
           )}
 
-          {/* Intermission between shots */}
+          {/* Intermission toast between shots */}
           {intermission && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[3px] screen-enter">
-              <div className="px-6 py-3 rounded-2xl bg-black/85 border border-emerald-500/40 text-emerald-300 shadow-2xl flex items-center gap-3">
-                <span className="text-xl">✅</span>
-                <span className="text-sm md:text-base font-semibold">{intermission}</span>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none screen-enter z-20">
+              <div className="px-5 py-2 rounded-2xl bg-black/85 backdrop-blur-md border border-emerald-500/50 text-emerald-300 shadow-2xl flex items-center gap-2.5">
+                <span className="text-base">✅</span>
+                <span className="text-xs md:text-sm font-semibold">{intermission}</span>
               </div>
             </div>
           )}
@@ -254,27 +314,32 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
       <div className="flex md:flex-col items-center justify-between gap-3 w-full md:w-56 glass p-3 md:p-5 rounded-2xl md:rounded-3xl shrink-0">
         <div className="text-center">
           <div className="text-[11px] md:text-xs uppercase tracking-wider text-zinc-400 font-semibold">
-            Shot {currentShot + 1} of {totalShots}
+            {isRetake ? `Retaking Shot ${currentShot + 1}` : `Shot ${currentShot + 1} of ${totalShots}`}
           </div>
+          {isRetake && (
+            <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium border border-purple-400/30">
+              🔄 Retake Mode
+            </span>
+          )}
         </div>
 
         {/* Shot thumbnails */}
         <div className="flex md:flex-col gap-2.5 my-auto overflow-x-auto md:overflow-visible py-1">
           {sortedSlots.map((s, idx) => {
-            const thumb = capturedThumbs[idx];
+            const thumb = capturedThumbs[isRetake ? 0 : idx];
             const isCurrent = idx === currentShot;
             return (
               <div
                 key={idx}
                 className={`relative w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center shrink-0 ${
-                  thumb
+                  thumb && isCurrent
                     ? 'border-purple-400/80 shadow-md ring-1 ring-purple-400/40'
                     : isCurrent
                     ? 'border-sky-400 bg-sky-500/10 shadow-[0_0_15px_rgba(56,189,248,0.4)]'
                     : 'border-white/10 bg-white/5 opacity-50'
                 }`}
               >
-                {thumb ? (
+                {thumb && isCurrent ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={thumb} alt={`Shot ${idx + 1}`} className="w-full h-full object-cover" />
                 ) : (
@@ -286,7 +351,7 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
         </div>
 
         <button onClick={handleCancel} className="btn btn-secondary btn-sm text-xs px-3 py-1.5 w-auto md:w-full">
-          🏠 Cancel
+          {isRetake ? '✕ Cancel Retake' : '🏠 Cancel'}
         </button>
       </div>
 

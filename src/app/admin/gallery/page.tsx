@@ -1,7 +1,6 @@
-import { getSessionsAction } from '@/actions/sessions';
-import { GalleryGrid } from '@/components/admin/GalleryGrid';
+import { redirect } from 'next/navigation';
 
-export default async function AdminGalleryPage() {
-  const sessions = await getSessionsAction(100);
-  return <GalleryGrid initialSessions={sessions} />;
+export default function AdminGalleryPage() {
+  redirect('/admin/events');
 }
+
