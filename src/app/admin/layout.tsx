@@ -54,8 +54,10 @@ export default async function AdminLayout({
       {/* Main Body */}
       <div className="flex-1 flex flex-col md:flex-row min-h-0">
         <AdminNav />
-        <main className="flex-1 p-4 md:p-8 overflow-y-auto max-w-5xl">
-          {children}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 lg:p-10">
+          <div className="max-w-4xl mx-auto w-full space-y-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>

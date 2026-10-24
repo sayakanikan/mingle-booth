@@ -13,7 +13,6 @@ interface CaptureScreenProps {
   onCancel: () => void;
 }
 
-const COUNTDOWN_SECONDS = 5;
 const RING_CIRCUMFERENCE = 314; // 2 * π * 50
 
 export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenProps) {
@@ -22,6 +21,8 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
 
   const [currentShot, setCurrentShot] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdownMax, setCountdownMax] = useState<number>(4);
+  const [intermission, setIntermission] = useState<string | null>(null);
   const [capturedThumbs, setCapturedThumbs] = useState<string[]>([]);
   const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -48,8 +49,13 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
       const slot = sortedSlots[shot];
       setActiveSlot(slot);
       setCurrentShot(shot);
+      setIntermission(null);
 
-      for (let n = COUNTDOWN_SECONDS; n >= 1; n--) {
+      // Shot 1 gets 4 seconds to prepare; subsequent shots get 3 seconds
+      const seconds = shot === 0 ? 4 : 3;
+      setCountdownMax(seconds);
+
+      for (let n = seconds; n >= 1; n--) {
         if (!isRunningRef.current) return;
         setCountdown(n);
         if (n > 1) {
@@ -62,9 +68,9 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
 
       if (!isRunningRef.current) return;
 
-      // Smile state
+      // Smile state — give guests 750ms to freeze and smile
       setCountdown(0);
-      await sleep(350);
+      await sleep(750);
 
       if (!isRunningRef.current || !videoRef.current) return;
 
@@ -80,10 +86,12 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
       }
 
       setCapturedThumbs((prev) => [...prev, canvas.toDataURL('image/jpeg', 0.5)]);
+      setCountdown(null);
 
       if (shot < totalShots - 1) {
-        setCountdown(null);
-        await sleep(1200);
+        setIntermission(`Shot ${shot + 1} of ${totalShots} saved! Get ready…`);
+        await sleep(1400);
+        setIntermission(null);
       }
     }
 
@@ -150,7 +158,12 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
     );
   }
 
-  const progress = countdown !== null && countdown > 0 ? (COUNTDOWN_SECONDS - countdown) / COUNTDOWN_SECONDS : 1;
+  const progress =
+    countdown !== null && countdown > 0
+      ? countdown / countdownMax
+      : countdown === 0
+      ? 0
+      : 1;
   const strokeOffset = RING_CIRCUMFERENCE * (1 - progress);
 
   return (
@@ -188,8 +201,8 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
 
           {/* Countdown timer overlay */}
           {countdown !== null && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/25 backdrop-blur-[2px]">
-              <div className="relative w-28 h-28 md:w-36 md:h-36 flex items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/30 backdrop-blur-[2px]">
+              <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 108 108">
                   <circle
                     cx="54"
@@ -204,20 +217,33 @@ export function CaptureScreen({ settings, onComplete, onCancel }: CaptureScreenP
                     cy="54"
                     r="50"
                     fill="none"
-                    stroke="#c084fc"
-                    strokeWidth="6"
+                    stroke={countdown === 0 ? '#34d399' : '#c084fc'}
+                    strokeWidth="7"
                     strokeDasharray={RING_CIRCUMFERENCE}
                     strokeDashoffset={strokeOffset}
                     strokeLinecap="round"
-                    className="transition-all duration-300"
+                    className="transition-all duration-700 ease-out"
                   />
                 </svg>
-                <span className="absolute font-bold text-4xl md:text-5xl text-white drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)]">
+                <span
+                  key={countdown}
+                  className="animate-counter-tick absolute font-bold text-5xl md:text-6xl text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)]"
+                >
                   {countdown === 0 ? '😊' : countdown}
                 </span>
               </div>
-              <div className="mt-3 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-md text-xs md:text-sm font-semibold text-purple-200 border border-purple-400/20 shadow-lg">
+              <div className="mt-4 px-5 py-2 rounded-full bg-black/75 backdrop-blur-md text-sm md:text-base font-semibold text-purple-200 border border-purple-400/30 shadow-xl">
                 {countdown === 0 ? 'SMILE! 📸' : 'Get ready...'}
+              </div>
+            </div>
+          )}
+
+          {/* Intermission between shots */}
+          {intermission && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none bg-black/40 backdrop-blur-[3px] screen-enter">
+              <div className="px-6 py-3 rounded-2xl bg-black/85 border border-emerald-500/40 text-emerald-300 shadow-2xl flex items-center gap-3">
+                <span className="text-xl">✅</span>
+                <span className="text-sm md:text-base font-semibold">{intermission}</span>
               </div>
             </div>
           )}

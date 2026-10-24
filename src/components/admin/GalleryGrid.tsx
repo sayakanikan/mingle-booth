@@ -44,46 +44,46 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold font-sans">Photo Session Gallery</h2>
-          <p className="text-sm text-zinc-400 mt-1">
-            Browse and download photo strips captured by guests.
+          <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Photo Session Gallery</h2>
+          <p className="text-sm text-zinc-400 mt-1.5">
+            Browse and download photo strips captured by guests in real time.
           </p>
         </div>
 
         {sessions.length > 0 && (
-          <button onClick={handleClearAll} className="btn btn-danger btn-sm text-xs self-start sm:self-auto">
+          <button onClick={handleClearAll} className="btn btn-danger btn-sm text-xs px-4 py-2 self-start sm:self-auto shadow-lg">
             🗑️ Clear All ({sessions.length})
           </button>
         )}
       </div>
 
       {sessions.length === 0 ? (
-        <div className="p-12 text-center text-zinc-500 text-sm glass rounded-3xl">
+        <div className="p-14 text-center text-zinc-400 text-sm glass rounded-3xl border border-white/10">
           No photo sessions captured yet. Launch the booth kiosk and take some photos!
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {sessions.map((s) => {
             const formattedDate = s.createdAt
               ? new Date(s.createdAt).toLocaleString(undefined, {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })
-              : 'Unknown date';
+              : 'Recent';
 
             return (
               <div
                 key={s.id}
-                className="group relative rounded-2xl glass p-3 flex flex-col items-center gap-2 border border-white/10 hover:border-white/20 transition-all shadow-md"
+                className="group relative rounded-2xl glass p-4 flex flex-col justify-between gap-3 border border-white/10 hover:border-white/25 transition-all shadow-lg"
               >
                 {/* Delete button */}
                 <button
                   type="button"
                   onClick={() => handleDelete(s.id)}
-                  className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow"
                   title="Delete session"
                 >
                   ✕
@@ -94,7 +94,7 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
                   href={`/s/${s.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full aspect-2/3 rounded-xl overflow-hidden bg-black/80 flex items-center justify-center p-1 border border-white/5 cursor-pointer"
+                  className="w-full h-44 sm:h-48 rounded-xl overflow-hidden bg-black/80 flex items-center justify-center p-2 border border-white/10 shadow-inner hover:scale-[1.02] transition-transform"
                   title="Open guest viewer"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -107,9 +107,9 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
                 </a>
 
                 {/* Details */}
-                <div className="w-full text-center">
-                  <div className="text-[11px] text-zinc-400">{formattedDate}</div>
-                  <div className="text-[10px] text-zinc-500 mt-0.5">
+                <div className="w-full text-center px-1">
+                  <div className="text-xs font-semibold text-zinc-200">{formattedDate}</div>
+                  <div className="text-[11px] text-zinc-400 mt-1">
                     {s.photoCount} shots · {s.layout}
                   </div>
                 </div>
@@ -120,7 +120,7 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
                     href={`/s/${s.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-secondary btn-sm flex-1 text-[11px] py-1 text-center"
+                    className="btn btn-secondary btn-sm flex-1 text-xs py-2 text-center"
                   >
                     View ↗
                   </a>
@@ -129,7 +129,7 @@ export function GalleryGrid({ initialSessions }: GalleryGridProps) {
                     download={`session-${s.id}.jpg`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm px-2 text-[11px] py-1"
+                    className="btn btn-primary btn-sm px-3 text-xs py-2"
                     title="Download strip"
                   >
                     ⬇

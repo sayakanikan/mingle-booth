@@ -41,17 +41,17 @@ export function PasswordForm() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 pb-10">
       <div>
-        <h2 className="text-2xl font-bold font-sans">Admin Security & Password</h2>
-        <p className="text-sm text-zinc-400 mt-1">
-          Manage access credentials for the Admin Dashboard.
+        <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Admin Security & Password</h2>
+        <p className="text-sm text-zinc-400 mt-1.5">
+          Manage credentials used to unlock the Admin Dashboard and change configurations.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="glass max-w-lg p-6 rounded-3xl flex flex-col gap-4 border border-white/10">
+      <form onSubmit={handleSubmit} className="glass max-w-xl p-6 sm:p-8 rounded-3xl flex flex-col gap-6 border border-white/10 shadow-xl">
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
             Current Password
           </label>
           <input
@@ -60,12 +60,12 @@ export function PasswordForm() {
             value={currentPass}
             onChange={(e) => setCurrentPass(e.target.value)}
             placeholder="••••••••"
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all font-mono"
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+        <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
             New Password
           </label>
           <input
@@ -73,13 +73,13 @@ export function PasswordForm() {
             required
             value={newPass}
             onChange={(e) => setNewPass(e.target.value)}
-            placeholder="••••••••"
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400"
+            placeholder="At least 4 characters"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all font-mono"
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
             Confirm New Password
           </label>
           <input
@@ -87,13 +87,17 @@ export function PasswordForm() {
             required
             value={confirmPass}
             onChange={(e) => setConfirmPass(e.target.value)}
-            placeholder="••••••••"
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400"
+            placeholder="Repeat new password"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all font-mono"
           />
         </div>
 
-        <div className="flex justify-end mt-2">
-          <button type="submit" disabled={saving} className="btn btn-primary px-8">
+        <div className="flex justify-end pt-4 border-t border-white/10">
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+          >
             {saving ? 'Updating…' : '🔒 Update Password'}
           </button>
         </div>

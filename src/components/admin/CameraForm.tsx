@@ -76,24 +76,24 @@ export function CameraForm({ settings }: CameraFormProps) {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8 pb-10">
       <div>
-        <h2 className="text-2xl font-bold font-sans">Camera Configuration</h2>
-        <p className="text-sm text-zinc-400 mt-1">
+        <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Camera Configuration</h2>
+        <p className="text-sm text-zinc-400 mt-1.5">
           Select webcam, capture card (e.g. Sony A6400, Elgato Cam Link), and resolution.
         </p>
       </div>
 
-      <form onSubmit={handleSave} className="glass p-6 rounded-3xl flex flex-col gap-5 border border-white/10">
+      <form onSubmit={handleSave} className="glass p-6 sm:p-8 rounded-3xl flex flex-col gap-7 border border-white/10 shadow-xl">
         {/* Device selection */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
             Video Device
           </label>
           <select
             value={selectedDeviceId}
             onChange={(e) => setSelectedDeviceId(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all cursor-pointer"
           >
             {devices.length === 0 ? (
               <option value="" className="bg-[#12121a]">
@@ -107,17 +107,20 @@ export function CameraForm({ settings }: CameraFormProps) {
               ))
             )}
           </select>
+          <p className="text-[11px] text-zinc-400">
+            Ensure your USB camera or capture card is plugged in and authorized.
+          </p>
         </div>
 
         {/* Resolution */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
             Capture Resolution
           </label>
           <select
             value={resolution}
             onChange={(e) => setResolution(e.target.value)}
-            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400"
+            className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all cursor-pointer"
           >
             <option value="1920x1080" className="bg-[#12121a]">
               1920 × 1080 (Full HD 1080p — Recommended)
@@ -131,36 +134,46 @@ export function CameraForm({ settings }: CameraFormProps) {
           </select>
         </div>
 
-        {/* Mirror */}
-        <div className="flex items-center gap-3">
+        {/* Mirror Toggle Card */}
+        <label htmlFor="mirrorCamera" className="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
           <input
             type="checkbox"
             id="mirrorCamera"
             checked={mirror}
             onChange={(e) => setMirror(e.target.checked)}
-            className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 bg-white/10 border-white/20"
+            className="w-5 h-5 rounded-md text-purple-600 focus:ring-purple-500 bg-white/10 border-white/20 cursor-pointer"
           />
-          <label htmlFor="mirrorCamera" className="text-sm font-medium text-zinc-200 cursor-pointer">
-            Mirror Camera Preview (Horizontal Flip for Selfies)
-          </label>
-        </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-semibold text-zinc-200">
+              Mirror Camera Preview
+            </span>
+            <span className="text-xs text-zinc-400">
+              Horizontal flip for intuitive selfie positioning
+            </span>
+          </div>
+        </label>
 
         {/* Test Video Preview Area */}
-        <div className="mt-2 flex flex-col gap-2">
+        <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-              Live Preview Feed
-            </span>
+            <div>
+              <span className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                Live Preview Feed
+              </span>
+              <p className="text-[11px] text-zinc-400">Verify orientation, lighting, and framing</p>
+            </div>
             <button
               type="button"
               onClick={toggleTest}
-              className="btn btn-secondary btn-sm text-xs"
+              className={`btn btn-sm text-xs px-4 py-2 ${
+                testing ? 'btn-danger' : 'btn-secondary'
+              }`}
             >
               {testing ? '⏹ Stop Feed' : '▶ Test Camera'}
             </button>
           </div>
 
-          <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/60 border border-white/10 flex items-center justify-center">
+          <div className="relative w-full h-56 sm:h-64 rounded-2xl overflow-hidden bg-black/80 border border-white/10 flex items-center justify-center shadow-inner">
             <video
               ref={videoRef}
               autoPlay
@@ -170,13 +183,20 @@ export function CameraForm({ settings }: CameraFormProps) {
               style={{ transform: mirror ? 'scaleX(-1)' : 'none' }}
             />
             {!testing && (
-              <span className="text-xs text-zinc-500">Camera preview inactive</span>
+              <div className="text-center p-4">
+                <span className="text-2xl block mb-1 opacity-60">📷</span>
+                <span className="text-xs text-zinc-400">Click &quot;Test Camera&quot; to preview live feed</span>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="flex justify-end mt-4">
-          <button type="submit" disabled={saving} className="btn btn-primary px-8">
+        <div className="flex justify-end pt-4 border-t border-white/10">
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+          >
             {saving ? 'Saving…' : '💾 Save Settings'}
           </button>
         </div>
