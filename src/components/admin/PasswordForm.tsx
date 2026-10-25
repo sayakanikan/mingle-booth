@@ -96,9 +96,16 @@ export function PasswordForm() {
           <button
             type="submit"
             disabled={saving}
-            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50 flex items-center gap-2"
           >
-            {saving ? 'Updating…' : '🔒 Update Password'}
+            {saving ? (
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                <span>Updating Password…</span>
+              </>
+            ) : (
+              '🔒 Update Password'
+            )}
           </button>
         </div>
       </form>

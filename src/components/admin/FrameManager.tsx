@@ -23,9 +23,13 @@ export function FrameManager({ settings }: FrameManagerProps) {
   const [frames, setFrames] = useState<Frame[]>(settings.frames);
   const [activeFrameId, setActiveFrameId] = useState<string | null>(settings.activeFrame?.id || null);
   const [uploading, setUploading] = useState(false);
+  const [loadingTemplate, setLoadingTemplate] = useState<string | null>(null);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleTemplateAdd = async (type: '3-strip-dark' | '3-strip-white' | '4-strip-dark' | '2x2-dark') => {
+    setLoadingTemplate(type);
     try {
       const tpl = generateDefaultFrame(type, settings.eventTitle || 'Mingle Booth');
       let dataUrlOrCloud = tpl.dataUrl;
@@ -68,6 +72,8 @@ export function FrameManager({ settings }: FrameManagerProps) {
       }
     } catch (err: unknown) {
       toast('Failed to create template: ' + (err as Error).message, 'error');
+    } finally {
+      setLoadingTemplate(null);
     }
   };
 
@@ -187,6 +193,7 @@ export function FrameManager({ settings }: FrameManagerProps) {
   };
 
   const handleActivate = async (frameId: string) => {
+    setActivatingId(frameId);
     try {
       const res = await activateFrameAction(frameId);
       if (res.success) {
@@ -196,6 +203,8 @@ export function FrameManager({ settings }: FrameManagerProps) {
       }
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
+    } finally {
+      setActivatingId(null);
     }
   };
 
@@ -214,6 +223,7 @@ export function FrameManager({ settings }: FrameManagerProps) {
 
   const handleRemove = async (frameId: string) => {
     if (!confirm('Are you sure you want to delete this frame?')) return;
+    setDeletingId(frameId);
     try {
       const res = await removeFrameAction(frameId);
       if (res.success) {
@@ -223,6 +233,8 @@ export function FrameManager({ settings }: FrameManagerProps) {
       }
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -287,31 +299,63 @@ export function FrameManager({ settings }: FrameManagerProps) {
         <div className="flex flex-wrap gap-3">
           <button
             type="button"
+            disabled={loadingTemplate !== null}
             onClick={() => handleTemplateAdd('3-strip-dark')}
-            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium"
+            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
           >
-            ✨ Classic 3-Strip (Dark)
+            {loadingTemplate === '3-strip-dark' ? (
+              <>
+                <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                <span>Adding…</span>
+              </>
+            ) : (
+              '✨ Classic 3-Strip (Dark)'
+            )}
           </button>
           <button
             type="button"
+            disabled={loadingTemplate !== null}
             onClick={() => handleTemplateAdd('3-strip-white')}
-            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium"
+            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
           >
-            ✨ Wedding 3-Strip (White)
+            {loadingTemplate === '3-strip-white' ? (
+              <>
+                <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                <span>Adding…</span>
+              </>
+            ) : (
+              '✨ Wedding 3-Strip (White)'
+            )}
           </button>
           <button
             type="button"
+            disabled={loadingTemplate !== null}
             onClick={() => handleTemplateAdd('4-strip-dark')}
-            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium"
+            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
           >
-            ✨ Neon 4-Strip
+            {loadingTemplate === '4-strip-dark' ? (
+              <>
+                <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                <span>Adding…</span>
+              </>
+            ) : (
+              '✨ Neon 4-Strip'
+            )}
           </button>
           <button
             type="button"
+            disabled={loadingTemplate !== null}
             onClick={() => handleTemplateAdd('2x2-dark')}
-            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium"
+            className="btn btn-secondary btn-sm py-2 px-4 text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
           >
-            ✨ Retro 2×2 Grid
+            {loadingTemplate === '2x2-dark' ? (
+              <>
+                <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                <span>Adding…</span>
+              </>
+            ) : (
+              '✨ Retro 2×2 Grid'
+            )}
           </button>
         </div>
       </div>
@@ -366,6 +410,8 @@ export function FrameManager({ settings }: FrameManagerProps) {
             {frames.map((frame) => {
               const isActive = frame.id === activeFrameId;
               const slotCount = frame.slots?.length || 0;
+              const isDeleting = deletingId === frame.id;
+              const isActivating = activatingId === frame.id;
 
               return (
                 <div
@@ -374,19 +420,24 @@ export function FrameManager({ settings }: FrameManagerProps) {
                     isActive
                       ? 'border-purple-400 bg-purple-500/15 shadow-[0_0_24px_rgba(192,132,252,0.3)] ring-1 ring-purple-400/50'
                       : 'border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/8'
-                  }`}
+                  } ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
                 >
                   {/* Delete button */}
                   <button
                     type="button"
+                    disabled={isDeleting || isActivating}
                     onClick={(e) => {
                       e.stopPropagation();
                       handleRemove(frame.id);
                     }}
-                    className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 shadow"
+                    className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-xs flex items-center justify-center transition-all shadow z-10 disabled:opacity-50"
                     title="Delete frame"
                   >
-                    ✕
+                    {isDeleting ? (
+                      <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                    ) : (
+                      '✕'
+                    )}
                   </button>
 
                   {/* Frame image preview */}
@@ -413,8 +464,9 @@ export function FrameManager({ settings }: FrameManagerProps) {
                   <div className="w-full flex flex-col gap-2 mt-1">
                     <button
                       type="button"
+                      disabled={isDeleting || isActivating}
                       onClick={() => handleEditSlots(frame)}
-                      className="btn btn-secondary btn-sm w-full text-xs py-2"
+                      className="btn btn-secondary btn-sm w-full text-xs py-2 disabled:opacity-50"
                     >
                       ✎ Edit Slots
                     </button>
@@ -426,10 +478,18 @@ export function FrameManager({ settings }: FrameManagerProps) {
                     ) : (
                       <button
                         type="button"
+                        disabled={isDeleting || isActivating}
                         onClick={() => handleActivate(frame.id)}
-                        className="btn btn-primary btn-sm w-full text-xs py-2"
+                        className="btn btn-primary btn-sm w-full text-xs py-2 flex items-center justify-center gap-1.5 disabled:opacity-50"
                       >
-                        Activate Frame
+                        {isActivating ? (
+                          <>
+                            <span className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                            <span>Activating…</span>
+                          </>
+                        ) : (
+                          'Activate Frame'
+                        )}
                       </button>
                     )}
                   </div>

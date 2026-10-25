@@ -141,6 +141,7 @@ export function Booth({ initialSettings }: BoothProps) {
             onComplete={handleCaptureComplete}
             onCancel={handleCaptureCancel}
             targetSlotIndex={retakeSlotIndex}
+            existingPhotos={capturedPhotos}
           />
         )}
 

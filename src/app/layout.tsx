@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Outfit, Dancing_Script } from 'next/font/google';
 import './globals.css';
+import React from 'react';
 import { ToastProvider } from '@/components/ui/Toast';
 import { PwaRegister } from '@/components/pwa/PwaRegister';
 

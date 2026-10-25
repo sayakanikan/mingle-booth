@@ -218,10 +218,23 @@ html, body {
   background: #ffffff;
   pointer-events: none;
   opacity: 0;
+  z-index: 50;
 }
 
 .camera-flash-overlay.active {
   animation: flashAnim 0.35s ease-out forwards;
+}
+
+@keyframes flashAnim {
+  0% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* Slot editor styles */

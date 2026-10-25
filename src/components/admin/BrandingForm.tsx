@@ -10,8 +10,6 @@ interface BrandingFormProps {
 }
 
 export function BrandingForm({ settings }: BrandingFormProps) {
-  const [title, setTitle] = useState(settings.eventTitle);
-  const [subtitle, setSubtitle] = useState(settings.eventSubtitle);
   const [logo, setLogo] = useState<string | null>(settings.brandLogoDataUrl);
   const [bgColor, setBgColor] = useState(settings.stripBgColor || '#1a1a28');
   const [textColor, setTextColor] = useState(settings.stripTextColor || '#ffffff');
@@ -36,8 +34,6 @@ export function BrandingForm({ settings }: BrandingFormProps) {
     setSaving(true);
     try {
       const res = await updateSettingsAction({
-        eventTitle: title,
-        eventSubtitle: subtitle,
         brandLogoDataUrl: logo,
         stripBgColor: bgColor,
         stripTextColor: textColor,
@@ -62,40 +58,36 @@ export function BrandingForm({ settings }: BrandingFormProps) {
       <div>
         <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Event Branding & Appearance</h2>
         <p className="text-sm text-zinc-400 mt-1.5">
-          Customize the screensaver, photo strip background colors, and event logos.
+          Customize photo strip background colors, typography, and upload brand logos. Event titles are managed under Events.
         </p>
       </div>
 
       <form onSubmit={handleSave} className="glass p-6 sm:p-8 rounded-3xl flex flex-col gap-7 border border-white/10 shadow-xl">
-        {/* Title & Subtitle */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
-              Event Title
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Sarah & John's Wedding"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all"
-            />
-            <p className="text-[11px] text-zinc-400">Main title displayed on screensaver and photo strips</p>
+        {/* Active Event Information Banner */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-purple-950/30 border border-purple-500/30 gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/30 flex items-center justify-center text-xl shrink-0">
+              🎉
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-xs uppercase tracking-wider text-purple-300 font-semibold">Active Event</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <h3 className="text-base font-bold text-white line-clamp-1">
+                {settings.eventTitle || 'Mingle Booth'}
+              </h3>
+              <p className="text-xs text-zinc-400 line-clamp-1">
+                {settings.eventSubtitle || 'by Kala Kini'}
+              </p>
+            </div>
           </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
-              Event Subtitle
-            </label>
-            <input
-              type="text"
-              value={subtitle}
-              onChange={(e) => setSubtitle(e.target.value)}
-              placeholder="e.g. October 24, 2026"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all"
-            />
-            <p className="text-[11px] text-zinc-400">Subtitle, date, or event hashtag</p>
-          </div>
+          <a
+            href="/admin/events"
+            className="btn btn-secondary btn-sm text-xs self-start sm:self-auto px-3.5 py-1.5 whitespace-nowrap"
+          >
+            Manage Events ➔
+          </a>
         </div>
 
         {/* Brand Logo Upload */}
@@ -209,9 +201,16 @@ export function BrandingForm({ settings }: BrandingFormProps) {
           <button
             type="submit"
             disabled={saving}
-            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+            className="btn btn-primary px-8 py-3 text-sm font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50 flex items-center gap-2"
           >
-            {saving ? 'Saving…' : '💾 Save Settings'}
+            {saving ? (
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                <span>Saving Branding Settings…</span>
+              </>
+            ) : (
+              '💾 Save Settings'
+            )}
           </button>
         </div>
       </form>

@@ -133,14 +133,22 @@ export async function deleteSessionAction(sessionId: string): Promise<{ success:
         session.gifUrl,
         ...session.photos.map((p) => p.url),
       ];
-      await deleteCloudinaryAssets(urls);
+
+      try {
+        await deleteCloudinaryAssets(urls);
+      } catch (cloudErr) {
+        console.warn('Cloudinary deletion warning (non-blocking):', cloudErr);
+      }
 
       await prisma.photoSession.delete({
         where: { id: sessionId },
       });
     }
 
+    revalidatePath('/admin/events');
+    revalidatePath('/admin/events/[id]', 'page');
     revalidatePath('/admin/gallery');
+    revalidatePath('/');
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: (err as Error).message };
@@ -170,13 +178,18 @@ export async function clearSessionsAction(eventId?: string): Promise<{ success: 
       }
     }
 
-    await deleteCloudinaryAssets(urls);
+    try {
+      await deleteCloudinaryAssets(urls);
+    } catch (cloudErr) {
+      console.warn('Cloudinary clear warning (non-blocking):', cloudErr);
+    }
 
     await prisma.photoSession.deleteMany({
       where: whereClause,
     });
 
     revalidatePath('/admin/events');
+    revalidatePath('/admin/events/[id]', 'page');
     revalidatePath('/admin/gallery');
     return { success: true };
   } catch (err: unknown) {

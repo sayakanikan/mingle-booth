@@ -100,7 +100,8 @@ export function ReviewScreen({
               onClick={() => onRetakeSlot(validIndex)}
               className="btn btn-secondary btn-sm text-xs py-1.5 px-3.5 hover:border-purple-400 hover:text-purple-300 transition-all shadow-md flex items-center gap-1.5"
             >
-              🔄 Retake Photo {validIndex + 1}
+              <span>🔄</span>
+              <span>Retake Photo {validIndex + 1}</span>
             </button>
           </div>
 
@@ -125,7 +126,7 @@ export function ReviewScreen({
           </div>
 
           {/* Thumbnail Selector Row */}
-          <div className="flex items-center gap-2.5 mt-1 overflow-x-auto py-1 max-w-full">
+          <div className="flex items-center justify-center flex-wrap gap-2.5 mt-1 py-1 w-full">
             {photos.map((canvas, idx) => {
               const isSelected = idx === validIndex;
               const thumbUrl = canvas.toDataURL('image/jpeg', 0.5);
@@ -134,7 +135,7 @@ export function ReviewScreen({
                   key={idx}
                   type="button"
                   onClick={() => setSelectedSlotIndex(idx)}
-                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all shrink-0 flex items-center justify-center ${
+                  className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all flex items-center justify-center ${
                     isSelected
                       ? 'border-purple-400 ring-2 ring-purple-400/50 shadow-lg scale-105'
                       : 'border-white/15 opacity-60 hover:opacity-100 hover:border-white/30'

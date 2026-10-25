@@ -24,7 +24,12 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [setActiveNow, setSetActiveNow] = useState(true);
-  const [loading, setLoading] = useState(false);
+  
+  // Granular loading states
+  const [creatingLoading, setCreatingLoading] = useState(false);
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [updatingLoading, setUpdatingLoading] = useState(false);
 
   const { toast } = useToast();
 
@@ -35,7 +40,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
       return;
     }
 
-    setLoading(true);
+    setCreatingLoading(true);
     try {
       const res = await createEventAction({
         title,
@@ -70,12 +75,12 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
     } finally {
-      setLoading(false);
+      setCreatingLoading(false);
     }
   };
 
   const handleActivate = async (eventId: string) => {
-    setLoading(true);
+    setActivatingId(eventId);
     try {
       const res = await activateEventAction(eventId);
       if (res.success) {
@@ -92,7 +97,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
     } finally {
-      setLoading(false);
+      setActivatingId(null);
     }
   };
 
@@ -100,7 +105,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
     e.preventDefault();
     if (!editingEvent) return;
 
-    setLoading(true);
+    setUpdatingLoading(true);
     try {
       const res = await updateEventAction(editingEvent.id, {
         title: editingEvent.title,
@@ -119,7 +124,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
     } finally {
-      setLoading(false);
+      setUpdatingLoading(false);
     }
   };
 
@@ -131,7 +136,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
 
     if (!confirm(confirmMsg)) return;
 
-    setLoading(true);
+    setDeletingId(eventId);
     try {
       const res = await deleteEventAction(eventId);
       if (res.success) {
@@ -150,7 +155,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
     } catch (err: unknown) {
       toast((err as Error).message, 'error');
     } finally {
-      setLoading(false);
+      setDeletingId(null);
     }
   };
 
@@ -202,12 +207,21 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
             return (
               <div
                 key={ev.id}
-                className={`relative rounded-3xl glass p-6 flex flex-col justify-between gap-5 transition-all shadow-xl border ${
+                className={`relative rounded-3xl glass p-6 flex flex-col justify-between gap-5 transition-all shadow-xl border overflow-hidden ${
                   ev.isActive
                     ? 'border-purple-500/60 ring-2 ring-purple-500/25 bg-purple-950/20'
                     : 'border-white/10 hover:border-white/20'
-                }`}
+                } ${deletingId === ev.id ? 'opacity-50 pointer-events-none' : ''}`}
               >
+                {/* Deleting Overlay */}
+                {deletingId === ev.id && (
+                  <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center gap-2">
+                    <div className="w-8 h-8 rounded-full border-2 border-red-500/30 border-t-red-400 animate-spin" />
+                    <span className="text-xs font-semibold text-red-200">Deleting Event…</span>
+                    <span className="text-[10px] text-zinc-400">Removing photos and storage</span>
+                  </div>
+                )}
+
                 {/* Top Row: Status Badge & Actions */}
                 <div className="flex items-center justify-between gap-2">
                   {ev.isActive ? (
@@ -218,32 +232,47 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   ) : (
                     <button
                       type="button"
-                      disabled={loading}
+                      disabled={activatingId !== null || deletingId !== null}
                       onClick={() => handleActivate(ev.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-purple-600/30 hover:border-purple-500/40 text-zinc-300 hover:text-purple-200 border border-white/10 transition-all shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-purple-600/30 hover:border-purple-500/40 text-zinc-300 hover:text-purple-200 border border-white/10 transition-all shadow-sm disabled:opacity-50"
                       title="Activate this event for the photo booth"
                     >
-                      <span>⚡</span>
-                      <span>Set as Active</span>
+                      {activatingId === ev.id ? (
+                        <>
+                          <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                          <span>Activating…</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>⚡</span>
+                          <span>Set as Active</span>
+                        </>
+                      )}
                     </button>
                   )}
 
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
+                      disabled={activatingId !== null || deletingId !== null}
                       onClick={() => setEditingEvent(ev)}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-all"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-all disabled:opacity-50"
                       title="Edit event details"
                     >
                       ✏️
                     </button>
                     <button
                       type="button"
+                      disabled={activatingId !== null || deletingId !== null}
                       onClick={() => handleDelete(ev.id, ev.title, ev.sessionCount)}
-                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                      className="p-1.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 transition-all disabled:opacity-50"
                       title="Delete event"
                     >
-                      🗑️
+                      {deletingId === ev.id ? (
+                        <span className="w-3.5 h-3.5 rounded-full border-2 border-red-400/30 border-t-red-400 animate-spin inline-block" />
+                      ) : (
+                        '🗑️'
+                      )}
                     </button>
                   </div>
                 </div>
@@ -284,7 +313,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
       {/* Modal: Create Event */}
       {isCreating && (
         <div
-          onClick={() => setIsCreating(false)}
+          onClick={() => !creatingLoading && setIsCreating(false)}
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
         >
           <div
@@ -308,8 +337,9 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   required
                   placeholder="e.g. Wedding of Sarah & Alex"
                   value={title}
+                  disabled={creatingLoading}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="input text-xs sm:text-sm w-full"
+                  className="input text-xs sm:text-sm w-full disabled:opacity-50"
                   autoFocus
                 />
               </div>
@@ -322,8 +352,9 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   type="text"
                   placeholder="e.g. October 24, 2026 or by Kala Kini"
                   value={subtitle}
+                  disabled={creatingLoading}
                   onChange={(e) => setSubtitle(e.target.value)}
-                  className="input text-xs sm:text-sm w-full"
+                  className="input text-xs sm:text-sm w-full disabled:opacity-50"
                 />
               </div>
 
@@ -332,6 +363,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   type="checkbox"
                   id="setActiveNow"
                   checked={setActiveNow}
+                  disabled={creatingLoading}
                   onChange={(e) => setSetActiveNow(e.target.checked)}
                   className="w-4 h-4 rounded text-purple-600 bg-black/40 border-white/20 focus:ring-purple-500"
                 />
@@ -343,17 +375,25 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
                 <button
                   type="button"
+                  disabled={creatingLoading}
                   onClick={() => setIsCreating(false)}
-                  className="btn btn-secondary btn-sm text-xs px-4"
+                  className="btn btn-secondary btn-sm text-xs px-4 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="btn btn-primary btn-sm text-xs px-5 shadow-lg"
+                  disabled={creatingLoading}
+                  className="btn btn-primary btn-sm text-xs px-5 shadow-lg flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  {loading ? 'Creating...' : 'Create Event'}
+                  {creatingLoading ? (
+                    <>
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                      <span>Creating Event…</span>
+                    </>
+                  ) : (
+                    'Create Event'
+                  )}
                 </button>
               </div>
             </form>
@@ -364,7 +404,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
       {/* Modal: Edit Event */}
       {editingEvent && (
         <div
-          onClick={() => setEditingEvent(null)}
+          onClick={() => !updatingLoading && setEditingEvent(null)}
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
         >
           <div
@@ -385,10 +425,11 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   type="text"
                   required
                   value={editingEvent.title}
+                  disabled={updatingLoading}
                   onChange={(e) =>
                     setEditingEvent({ ...editingEvent, title: e.target.value })
                   }
-                  className="input text-xs sm:text-sm w-full"
+                  className="input text-xs sm:text-sm w-full disabled:opacity-50"
                 />
               </div>
 
@@ -399,27 +440,36 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                 <input
                   type="text"
                   value={editingEvent.subtitle}
+                  disabled={updatingLoading}
                   onChange={(e) =>
                     setEditingEvent({ ...editingEvent, subtitle: e.target.value })
                   }
-                  className="input text-xs sm:text-sm w-full"
+                  className="input text-xs sm:text-sm w-full disabled:opacity-50"
                 />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
                 <button
                   type="button"
+                  disabled={updatingLoading}
                   onClick={() => setEditingEvent(null)}
-                  className="btn btn-secondary btn-sm text-xs px-4"
+                  className="btn btn-secondary btn-sm text-xs px-4 disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="btn btn-primary btn-sm text-xs px-5 shadow-lg"
+                  disabled={updatingLoading}
+                  className="btn btn-primary btn-sm text-xs px-5 shadow-lg flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  {loading ? 'Saving...' : 'Save Changes'}
+                  {updatingLoading ? (
+                    <>
+                      <span className="w-3.5 h-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin inline-block" />
+                      <span>Saving…</span>
+                    </>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             </form>

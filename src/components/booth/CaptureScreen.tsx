@@ -12,6 +12,7 @@ interface CaptureScreenProps {
   onComplete: (photos: HTMLCanvasElement[]) => void;
   onCancel: () => void;
   targetSlotIndex?: number | null;
+  existingPhotos?: HTMLCanvasElement[];
 }
 
 const RING_CIRCUMFERENCE = 314; // 2 * π * 50
@@ -23,19 +24,12 @@ export function CaptureScreen({
   onComplete,
   onCancel,
   targetSlotIndex,
+  existingPhotos,
 }: CaptureScreenProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const flashRef = useRef<HTMLDivElement | null>(null);
 
   const isRetake = targetSlotIndex !== undefined && targetSlotIndex !== null;
-
-  const [currentShot, setCurrentShot] = useState(isRetake ? targetSlotIndex : 0);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [countdownMax, setCountdownMax] = useState<number>(COUNTDOWN_SECONDS);
-  const [intermission, setIntermission] = useState<string | null>(null);
-  const [capturedThumbs, setCapturedThumbs] = useState<string[]>([]);
-  const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Memoize slots to prevent generating a new array reference on every render
   const sortedSlots = React.useMemo(() => {
@@ -44,6 +38,28 @@ export function CaptureScreen({
   }, [settings.activeFrame?.slots]);
 
   const totalShots = sortedSlots.length;
+
+  const [currentShot, setCurrentShot] = useState(isRetake ? targetSlotIndex : 0);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [countdownMax, setCountdownMax] = useState<number>(COUNTDOWN_SECONDS);
+  const [intermission, setIntermission] = useState<string | null>(null);
+  const [capturedThumbs, setCapturedThumbs] = useState<(string | null)[]>(() => {
+    const arr: (string | null)[] = new Array(sortedSlots.length).fill(null);
+    if (existingPhotos && existingPhotos.length > 0) {
+      existingPhotos.forEach((canvas, i) => {
+        if (canvas && (!isRetake || i !== targetSlotIndex)) {
+          try {
+            arr[i] = canvas.toDataURL('image/jpeg', 0.6);
+          } catch {
+            // ignore
+          }
+        }
+      });
+    }
+    return arr;
+  });
+  const [activeSlot, setActiveSlot] = useState<Slot | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Stable refs for props to avoid re-triggering effects during countdown re-renders
   const settingsRef = useRef(settings);
@@ -116,7 +132,12 @@ export function CaptureScreen({
         setTimeout(() => flashRef.current?.classList.remove('active'), 350);
       }
 
-      setCapturedThumbs((prev) => [...prev, canvas.toDataURL('image/jpeg', 0.5)]);
+      const thumbUrl = canvas.toDataURL('image/jpeg', 0.6);
+      setCapturedThumbs((prev) => {
+        const next = [...prev];
+        next[shot] = thumbUrl;
+        return next;
+      });
       await sleep(500);
       setCountdown(null);
 
@@ -326,24 +347,37 @@ export function CaptureScreen({
         {/* Shot thumbnails */}
         <div className="flex md:flex-col gap-2.5 my-auto overflow-x-auto md:overflow-visible py-1">
           {sortedSlots.map((s, idx) => {
-            const thumb = capturedThumbs[isRetake ? 0 : idx];
+            const thumb = capturedThumbs[idx];
             const isCurrent = idx === currentShot;
             return (
               <div
                 key={idx}
                 className={`relative w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center shrink-0 ${
-                  thumb && isCurrent
-                    ? 'border-purple-400/80 shadow-md ring-1 ring-purple-400/40'
-                    : isCurrent
-                    ? 'border-sky-400 bg-sky-500/10 shadow-[0_0_15px_rgba(56,189,248,0.4)]'
+                  isCurrent
+                    ? 'border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_15px_rgba(56,189,248,0.5)] scale-105 z-10'
+                    : thumb
+                    ? 'border-purple-400/80 shadow-md ring-1 ring-purple-400/40 opacity-95'
                     : 'border-white/10 bg-white/5 opacity-50'
                 }`}
               >
-                {thumb && isCurrent ? (
+                {thumb ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={thumb} alt={`Shot ${idx + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={thumb}
+                    alt={`Shot ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <span className="font-bold text-base md:text-lg text-zinc-400">{idx + 1}</span>
+                  <span className="font-bold text-base md:text-lg text-zinc-400">
+                    {idx + 1}
+                  </span>
+                )}
+                {/* Shot number badge */}
+                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/75 text-[9px] font-bold text-white z-10">
+                  {idx + 1}
+                </span>
+                {isCurrent && (
+                  <span className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping z-10" />
                 )}
               </div>
             );
