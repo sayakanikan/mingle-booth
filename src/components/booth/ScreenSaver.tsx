@@ -67,17 +67,16 @@ export function ScreenSaver({ settings, onStart }: ScreenSaverProps) {
       </div>
 
       {/* Brand logo & titles */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl">
+      <div className="relative z-10 flex flex-col items-center text-center gap-3 px-6 max-w-4xl">
         {/* Logo presentation */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={settings.brandLogoDataUrl || '/mingle-booth-logo.png'}
           alt="Mingle Booth by Kala Kini"
-          className="max-w-[280px] sm:max-w-[500px] max-h-[500px] object-contain drop-shadow-[0_12px_40px_rgba(226,74,33,0.35)]"
-          style={{ animation: 'floatText 4s ease-in-out infinite' }}
+          className="max-w-[240px] sm:max-w-[300px] max-h-[160px] object-contain drop-shadow-[0_12px_40px_rgba(226,74,33,0.35)] mb-2"
         />
 
-        {/* <h1
+        <h1
           className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-bold font-display text-[#faf6ee] drop-shadow-[0_4px_30px_rgba(226,74,33,0.45)] tracking-tight leading-tight py-2"
           style={{ animation: 'floatText 4s ease-in-out infinite' }}
         >
@@ -86,10 +85,10 @@ export function ScreenSaver({ settings, onStart }: ScreenSaverProps) {
 
         <p className="text-xs sm:text-sm md:text-base tracking-[0.25em] uppercase font-light text-[#c8beb7] mt-1">
           {settings.eventSubtitle || 'by Kala Kini'}
-        </p> */}
+        </p>
 
         {/* Start Tap prompt */}
-        <div className="flex flex-col items-center">
+        <div className="mt-8 sm:mt-12 flex flex-col items-center">
           <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full bg-[#e24a21]/20 border border-[#e24a21]/40 shadow-[0_0_25px_rgba(226,74,33,0.3)] animate-pulse">
             <span className="w-2 h-2 rounded-full bg-[#e24a21]" />
             <span className="text-xs sm:text-sm font-semibold text-[#faf6ee] tracking-widest uppercase">
