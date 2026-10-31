@@ -34,25 +34,28 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#14100e] text-[#faf6ee] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background ambient glow */}
       <div
-        className="absolute w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none -top-20 -left-20 opacity-30"
-        style={{ background: 'radial-gradient(circle, #c084fc, #f472b6)' }}
+        className="absolute w-[500px] h-[500px] rounded-full blur-[140px] pointer-events-none -top-20 -left-20 opacity-25"
+        style={{ background: 'radial-gradient(circle, #e24a21, #f17b54)' }}
       />
       <div
         className="absolute w-[400px] h-[400px] rounded-full blur-[130px] pointer-events-none -bottom-20 -right-20 opacity-20"
-        style={{ background: 'radial-gradient(circle, #38bdf8, #818cf8)' }}
+        style={{ background: 'radial-gradient(circle, #e5a93c, #e24a21)' }}
       />
 
       <div className="glass-card max-w-sm w-full p-8 rounded-3xl text-center shadow-2xl flex flex-col items-center gap-5 relative z-10 border border-white/15">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-pink-500/20 border border-purple-400/40 flex items-center justify-center text-3xl shadow-lg shadow-purple-500/10">
-          🔐
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/mingle-booth-logo.png"
+          alt="Mingle Booth by Kala Kini"
+          className="w-28 h-auto object-contain drop-shadow-[0_4px_20px_rgba(226,74,33,0.35)]"
+        />
 
         <div>
-          <h2 className="text-2xl font-bold text-hero-gradient font-sans tracking-tight">Admin Access</h2>
-          <p className="text-xs text-zinc-400 mt-1">Enter password to configure photobooth</p>
+          <h2 className="text-2xl font-bold font-sans tracking-tight text-[#faf6ee]">Admin Access</h2>
+          <p className="text-xs text-[#c8beb7] mt-1">Enter password to configure photobooth</p>
         </div>
 
         {error && (
@@ -69,7 +72,7 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter password..."
-              className="w-full px-4 py-3 pr-11 rounded-xl bg-white/5 border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400 transition-all text-center tracking-wider font-mono"
+              className="w-full px-4 py-3 pr-11 rounded-xl bg-white/5 border border-white/15 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-[#e24a21] focus:ring-1 focus:ring-[#e24a21] transition-all text-center tracking-wider font-mono"
             />
             <button
               type="button"

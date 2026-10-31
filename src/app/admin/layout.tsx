@@ -26,8 +26,13 @@ export default async function AdminLayout({
     <div className="min-h-screen bg-[#14100e] text-[#faf6ee] flex flex-col font-sans">
       {/* Top Header */}
       <header className="h-16 border-b border-white/10 px-4 md:px-6 flex items-center justify-between bg-[#181311]/90 backdrop-blur-md sticky top-0 z-30">
-        <div className="flex items-center gap-2.5">
-          <span className="text-xl">⚙️</span>
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/mingle-booth-logo.png"
+            alt="Mingle Booth Logo"
+            className="w-9 h-9 object-contain drop-shadow-[0_2px_8px_rgba(226,74,33,0.3)]"
+          />
           <div>
             <h1 className="font-bold text-sm md:text-base text-[#faf6ee]">Admin Dashboard</h1>
             <p className="text-[10px] text-[#c8beb7] hidden sm:block">Mingle Booth by Kala Kini Experience Manager</p>
