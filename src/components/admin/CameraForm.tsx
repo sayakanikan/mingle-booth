@@ -86,7 +86,7 @@ export function CameraForm({ settings }: CameraFormProps) {
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight">Camera Configuration</h2>
           <p className="text-sm text-zinc-400 mt-1.5">
-            Select webcam, capture card (e.g. Sony a6400, Elgato Cam Link), and resolution.
+            Select webcam, capture card (e.g. Sony a6400 / a6700, Elgato Cam Link), and resolution.
           </p>
         </div>
         <button
@@ -95,7 +95,7 @@ export function CameraForm({ settings }: CameraFormProps) {
           className="btn btn-secondary btn-sm px-4 py-2 self-start sm:self-auto text-xs font-semibold flex items-center gap-2 border border-purple-400/40 hover:border-purple-400 hover:text-purple-300 shadow-md transition-all"
         >
           <span>📸</span>
-          <span>{showSonyGuide ? 'Hide Sony a6400 Guide' : 'Sony a6400 & Flash Setup Tutorial'}</span>
+          <span>{showSonyGuide ? 'Hide Sony Guide' : 'Sony a6400 / a6700 & Flash Tutorial'}</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
             Guide
           </span>
@@ -110,10 +110,10 @@ export function CameraForm({ settings }: CameraFormProps) {
               <span className="text-3xl p-2.5 rounded-2xl bg-purple-500/10 border border-purple-500/20">📷</span>
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  Sony a6400 & Flash Connection Tutorial
+                  Sony a6400 & a6700 Connection Tutorial
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  Step-by-step guide for clean 1080p HDMI video feed, continuous power, and flash/lighting sync.
+                  Step-by-step guide for clean 1080p/4K video feed, direct USB-C streaming, continuous power, and flash/lighting sync.
                 </p>
               </div>
             </div>
@@ -152,34 +152,44 @@ export function CameraForm({ settings }: CameraFormProps) {
           {/* Tab 1: Cables & Hardware */}
           {guideTab === 'hardware' && (
             <div className="flex flex-col gap-4 text-xs sm:text-sm text-zinc-300 leading-relaxed">
+              {/* Highlight card for Sony a6700 USB-C streaming */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/20 via-pink-500/10 to-transparent border border-purple-500/30 flex flex-col gap-1.5">
+                <span className="font-bold text-white flex items-center gap-2">
+                  <span>✨</span> Sony a6700 Special: Direct USB-C Plug & Play (No Capture Card Needed!)
+                </span>
+                <p className="text-xs text-zinc-300">
+                  The <strong>Sony a6700</strong> has native UVC/UAC webcam streaming. You can plug a single <strong>USB-C to USB-C cable</strong> directly into your computer, enable <code>USB Streaming</code> in the a6700 menu, and Mingle Booth will recognize it immediately at up to 4K / 1080p60 while charging via USB-PD.
+                </p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
                   <span className="font-semibold text-purple-300 flex items-center gap-1.5">
-                    <span>1️⃣</span> HDMI Capture Card
+                    <span>1️⃣</span> HDMI Capture Card (a6400 / a6700)
                   </span>
                   <p className="text-xs text-zinc-400">
-                    Use an <strong>Elgato Cam Link 4K</strong> or generic <strong>USB 3.0 HDMI Video Capture Card</strong>. Connect it directly to a high-speed blue USB 3.0 port on your computer.
+                    Use an <strong>Elgato Cam Link 4K</strong> or generic <strong>USB 3.0 HDMI Video Capture Card</strong>. Connect it directly to a blue USB 3.0 port on your computer.
                   </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
                   <span className="font-semibold text-purple-300 flex items-center gap-1.5">
-                    <span>2️⃣</span> Micro-HDMI to HDMI Cable
+                    <span>2️⃣</span> Micro-HDMI Cable
                   </span>
                   <p className="text-xs text-zinc-400">
-                    Connect the <strong>Micro-HDMI (Type D)</strong> end to the Sony a6400 HDMI port, and the full HDMI end into the capture card.
+                    Connect the <strong>Micro-HDMI (Type D)</strong> end to the camera HDMI port, and the full HDMI end into the capture card.
                   </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-2">
                   <span className="font-semibold text-purple-300 flex items-center gap-1.5">
-                    <span>3️⃣</span> Continuous AC Power
+                    <span>3️⃣</span> Continuous Power
                   </span>
                   <p className="text-xs text-zinc-400">
-                    Use an <strong>AC-PW20 dummy battery / DC coupler</strong> (or plug a USB charger into the Micro-USB port) so the camera runs indefinitely during long events without dying.
+                    For a6400: Use an <strong>AC-PW20 dummy battery</strong>. For a6700: Plug in a <strong>USB-PD fast charger</strong> or dummy battery so the camera never runs out of power during events.
                   </p>
                 </div>
               </div>
               <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-200">
-                💡 <strong>Tip:</strong> Windows and macOS recognize the capture card as a standard webcam. Once connected, select it in the <strong>Video Device</strong> dropdown below.
+                💡 <strong>Tip:</strong> Windows and macOS recognize both the capture card and a6700 USB streaming as standard webcams. Select it in the <strong>Video Device</strong> dropdown below.
               </div>
             </div>
           )}

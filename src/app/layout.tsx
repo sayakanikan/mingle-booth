@@ -40,7 +40,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a0f',
+  themeColor: '#14100e',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -55,7 +55,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${outfit.variable} ${dancingScript.variable}`}>
-      <body className="antialiased min-h-screen bg-[#0a0a0f] text-[#f1f0ff] selection:bg-purple-500/30 selection:text-white">
+      <body className="antialiased min-h-screen bg-[#14100e] text-[#faf6ee] selection:bg-[#e24a21]/30 selection:text-white">
         <PwaRegister />
         <ToastProvider>{children}</ToastProvider>
       </body>

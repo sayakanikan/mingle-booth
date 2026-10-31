@@ -17,6 +17,8 @@ export function getDeviceLabel(device: MediaDeviceInfo, index: number): string {
   const raw = device.label || `Camera ${index + 1}`;
   const lower = raw.toLowerCase();
 
+  if (lower.includes('sony') || lower.includes('ilce'))
+    return `📸 ${raw}  [Sony Mirrorless]`;
   if (lower.includes('obs') || lower.includes('virtual'))
     return `🎬 ${raw}  [Virtual / OBS]`;
   if (lower.includes('usb video') || lower.includes('capture') || lower.includes('hdmi') || lower.includes('elgato') || lower.includes('magewell') || lower.includes('cam link') || lower.includes('4k capture'))

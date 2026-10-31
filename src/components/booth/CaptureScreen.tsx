@@ -283,7 +283,7 @@ export function CaptureScreen({
           {/* Countdown timer - positioned in top-right corner so it never blocks the live preview */}
           {countdown !== null && (
             <div className="absolute top-3 right-3 md:top-4 md:right-4 z-20 pointer-events-none flex flex-col items-center">
-              <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center bg-black/65 backdrop-blur-md rounded-full border border-white/15 shadow-2xl ring-2 ring-purple-500/40">
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-full border border-white/15 shadow-2xl ring-2 ring-[#e24a21]/50">
                 <svg className="w-full h-full -rotate-90 p-1" viewBox="0 0 108 108">
                   <circle
                     cx="54"
@@ -298,7 +298,7 @@ export function CaptureScreen({
                     cy="54"
                     r="50"
                     fill="none"
-                    stroke={countdown === 0 ? '#34d399' : '#c084fc'}
+                    stroke={countdown === 0 ? '#34d399' : '#e24a21'}
                     strokeWidth="8"
                     strokeDasharray={RING_CIRCUMFERENCE}
                     strokeDashoffset={strokeOffset}
@@ -313,7 +313,7 @@ export function CaptureScreen({
                   {countdown === 0 ? '📸' : countdown}
                 </span>
               </div>
-              <div className="mt-1.5 px-3 py-0.5 rounded-full bg-black/75 backdrop-blur-md text-[11px] md:text-xs font-semibold text-purple-200 border border-purple-400/30 shadow-lg">
+              <div className="mt-1.5 px-3 py-0.5 rounded-full bg-black/80 backdrop-blur-md text-[11px] md:text-xs font-semibold text-[#fdeee9] border border-[#e24a21]/40 shadow-lg">
                 {countdown === 0 ? 'SMILE! 📸' : 'Get ready...'}
               </div>
             </div>
@@ -322,8 +322,8 @@ export function CaptureScreen({
           {/* Intermission toast between shots */}
           {intermission && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none screen-enter z-20">
-              <div className="px-5 py-2 rounded-2xl bg-black/85 backdrop-blur-md border border-emerald-500/50 text-emerald-300 shadow-2xl flex items-center gap-2.5">
-                <span className="text-base">✅</span>
+              <div className="px-5 py-2 rounded-2xl bg-black/85 backdrop-blur-md border border-[#e24a21]/50 text-[#faf6ee] shadow-2xl flex items-center gap-2.5">
+                <span className="text-base">✨</span>
                 <span className="text-xs md:text-sm font-semibold">{intermission}</span>
               </div>
             </div>
@@ -334,11 +334,11 @@ export function CaptureScreen({
       {/* Sidebar with Shot Tracker & Cancel */}
       <div className="flex md:flex-col items-center justify-between gap-3 w-full md:w-56 glass p-3 md:p-5 rounded-2xl md:rounded-3xl shrink-0">
         <div className="text-center">
-          <div className="text-[11px] md:text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+          <div className="text-[11px] md:text-xs uppercase tracking-wider text-[#c8beb7] font-semibold">
             {isRetake ? `Retaking Shot ${currentShot + 1}` : `Shot ${currentShot + 1} of ${totalShots}`}
           </div>
           {isRetake && (
-            <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium border border-purple-400/30">
+            <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full bg-[#e24a21]/20 text-[#fdeee9] font-medium border border-[#e24a21]/30">
               🔄 Retake Mode
             </span>
           )}
@@ -354,9 +354,9 @@ export function CaptureScreen({
                 key={idx}
                 className={`relative w-14 h-14 md:w-20 md:h-20 rounded-xl md:rounded-2xl overflow-hidden border-2 transition-all flex items-center justify-center shrink-0 ${
                   isCurrent
-                    ? 'border-sky-400 ring-2 ring-sky-400/50 shadow-[0_0_15px_rgba(56,189,248,0.5)] scale-105 z-10'
+                    ? 'border-[#e24a21] ring-2 ring-[#e24a21]/50 shadow-[0_0_15px_rgba(226,74,33,0.5)] scale-105 z-10'
                     : thumb
-                    ? 'border-purple-400/80 shadow-md ring-1 ring-purple-400/40 opacity-95'
+                    ? 'border-[#f17b54]/80 shadow-md ring-1 ring-[#f17b54]/40 opacity-95'
                     : 'border-white/10 bg-white/5 opacity-50'
                 }`}
               >
@@ -377,7 +377,7 @@ export function CaptureScreen({
                   {idx + 1}
                 </span>
                 {isCurrent && (
-                  <span className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping z-10" />
+                  <span className="absolute top-1 left-1 w-2.5 h-2.5 rounded-full bg-[#e24a21] animate-ping z-10" />
                 )}
               </div>
             );

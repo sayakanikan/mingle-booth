@@ -64,20 +64,26 @@ export function SessionViewer({
   const hasPhotos = !!stripUrl || !!gifUrl || originalUrls.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-[#f1f0ff] flex flex-col items-center py-6 px-3 sm:px-6 font-sans overflow-x-hidden">
-      {/* Header */}
-      <div className="flex flex-col items-center text-center gap-1.5 max-w-md w-full mb-4">
-        <h1 className="text-2xl sm:text-3xl font-bold text-hero-gradient font-sans">
-          📸 {title}
+    <div className="min-h-screen bg-[#14100e] text-[#faf6ee] flex flex-col items-center py-6 px-3 sm:px-6 font-sans overflow-x-hidden">
+      {/* Header with Kala Kini Branding */}
+      <div className="flex flex-col items-center text-center gap-2 max-w-md w-full mb-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/mingle-booth-logo.png"
+          alt="Mingle Booth by Kala Kini"
+          className="w-36 sm:w-44 h-auto object-contain drop-shadow-[0_4px_20px_rgba(226,74,33,0.3)]"
+        />
+        <h1 className="text-xl sm:text-2xl font-bold font-display text-[#faf6ee] mt-1">
+          {title}
         </h1>
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-[#c8beb7] tracking-wider uppercase font-medium">
           Your photo session memories
         </p>
       </div>
 
       {!hasPhotos && (
-        <div className="my-auto text-center p-8 glass rounded-3xl max-w-sm mt-8">
-          <p className="text-zinc-400 text-sm">
+        <div className="my-auto text-center p-8 glass rounded-3xl max-w-sm mt-8 border border-white/10">
+          <p className="text-[#c8beb7] text-sm">
             No photos found in this session yet. Visit the booth to take some photos!
           </p>
         </div>
@@ -88,10 +94,10 @@ export function SessionViewer({
           {/* Column 1: Photo Strip */}
           {stripUrl && (
             <div className="w-full max-w-sm flex flex-col items-center gap-3">
-              <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold self-start sm:self-center">
+              <span className="text-xs uppercase tracking-wider text-[#faf6ee] font-semibold self-start sm:self-center flex items-center gap-1.5">
                 🎞️ Photo Strip
               </span>
-              <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/10 bg-black flex items-center justify-center p-1.5">
+              <div className="w-full rounded-2xl overflow-hidden shadow-2xl border border-white/15 bg-black flex items-center justify-center p-1.5 ring-1 ring-[#e24a21]/20">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={stripUrl}
@@ -104,14 +110,14 @@ export function SessionViewer({
                   type="button"
                   disabled={downloadingUrl === stripUrl}
                   onClick={() => downloadAsset(stripUrl, `photo-strip.jpg`)}
-                  className="btn btn-primary btn-sm flex-1 text-center text-xs py-2.5"
+                  className="btn btn-primary btn-sm flex-1 text-center text-xs py-2.5 font-semibold"
                 >
                   {downloadingUrl === stripUrl ? '⏳ Downloading…' : '⬇ Download Strip'}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleShare(stripUrl)}
-                  className="btn btn-secondary btn-sm px-4 text-xs"
+                  className="btn btn-secondary btn-sm px-4 text-xs font-semibold"
                 >
                   ↗ Share
                 </button>
@@ -124,10 +130,10 @@ export function SessionViewer({
             {/* Animated GIF Card */}
             {gifUrl && (
               <div className="w-full flex flex-col gap-2.5">
-                <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+                <span className="text-xs uppercase tracking-wider text-[#faf6ee] font-semibold flex items-center gap-1.5">
                   🎬 Animated GIF
                 </span>
-                <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-white/10 bg-black flex items-center justify-center p-1.5">
+                <div className="w-full rounded-2xl overflow-hidden shadow-xl border border-white/15 bg-black flex items-center justify-center p-1.5 ring-1 ring-[#f17b54]/20">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={gifUrl}
@@ -139,7 +145,7 @@ export function SessionViewer({
                   type="button"
                   disabled={downloadingUrl === gifUrl}
                   onClick={() => downloadAsset(gifUrl, `animated-photo.gif`)}
-                  className="btn btn-secondary btn-sm w-full text-xs py-2"
+                  className="btn btn-primary btn-sm w-full text-xs py-2.5 font-semibold"
                 >
                   {downloadingUrl === gifUrl ? '⏳ Downloading…' : '⬇ Download GIF'}
                 </button>
@@ -149,7 +155,7 @@ export function SessionViewer({
             {/* Single Photos Grid */}
             {originalUrls.length > 0 && (
               <div className="w-full flex flex-col gap-2.5">
-                <span className="text-xs uppercase tracking-wider text-zinc-400 font-semibold">
+                <span className="text-xs uppercase tracking-wider text-[#faf6ee] font-semibold flex items-center gap-1.5">
                   📷 Individual Photos ({originalUrls.length})
                 </span>
                 <div className="grid grid-cols-2 gap-3 w-full">
@@ -171,7 +177,7 @@ export function SessionViewer({
                         type="button"
                         disabled={downloadingUrl === url}
                         onClick={() => downloadAsset(url, `photo-${i + 1}.jpg`)}
-                        className="btn btn-secondary btn-sm text-[11px] py-1.5 w-full"
+                        className="btn btn-secondary btn-sm text-[11px] py-1.5 w-full hover:border-[#e24a21]"
                       >
                         {downloadingUrl === url ? '⏳ Saving…' : `⬇ Save Photo ${i + 1}`}
                       </button>
@@ -184,8 +190,8 @@ export function SessionViewer({
         </div>
       )}
 
-      <footer className="mt-10 pb-4 text-[11px] text-zinc-500 text-center">
-        Powered by Mingle Booth by Kala Kini
+      <footer className="mt-10 pb-4 text-[11px] text-[#8e8179] text-center tracking-wider">
+        Mingle Booth by Kala Kini
       </footer>
     </div>
   );

@@ -92,13 +92,13 @@ export function ReviewScreen({
         {/* Left: Big Preview of the Selected Photo */}
         <div className="flex flex-col items-center gap-3 flex-1 h-full min-h-0 justify-center max-w-lg">
           <div className="flex items-center justify-between w-full px-1">
-            <span className="text-xs font-semibold text-purple-300">
+            <span className="text-xs font-semibold text-[#fdeee9]">
               🔍 Photo {validIndex + 1} of {photos.length}
             </span>
             <button
               type="button"
               onClick={() => onRetakeSlot(validIndex)}
-              className="btn btn-secondary btn-sm text-xs py-1.5 px-3.5 hover:border-purple-400 hover:text-purple-300 transition-all shadow-md flex items-center gap-1.5"
+              className="btn btn-secondary btn-sm text-xs py-1.5 px-3.5 hover:border-[#e24a21] hover:text-[#fdeee9] transition-all shadow-md flex items-center gap-1.5"
             >
               <span>🔄</span>
               <span>Retake Photo {validIndex + 1}</span>
@@ -137,7 +137,7 @@ export function ReviewScreen({
                   onClick={() => setSelectedSlotIndex(idx)}
                   className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all flex items-center justify-center ${
                     isSelected
-                      ? 'border-purple-400 ring-2 ring-purple-400/50 shadow-lg scale-105'
+                      ? 'border-[#e24a21] ring-2 ring-[#e24a21]/50 shadow-lg scale-105'
                       : 'border-white/15 opacity-60 hover:opacity-100 hover:border-white/30'
                   }`}
                   title={`Select Photo ${idx + 1}`}

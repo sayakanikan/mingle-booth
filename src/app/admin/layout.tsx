@@ -23,14 +23,14 @@ export default async function AdminLayout({
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-[#f1f0ff] flex flex-col font-sans">
+    <div className="min-h-screen bg-[#14100e] text-[#faf6ee] flex flex-col font-sans">
       {/* Top Header */}
-      <header className="h-16 border-b border-white/10 px-4 md:px-6 flex items-center justify-between bg-[#12121a]/90 backdrop-blur-md sticky top-0 z-30">
+      <header className="h-16 border-b border-white/10 px-4 md:px-6 flex items-center justify-between bg-[#181311]/90 backdrop-blur-md sticky top-0 z-30">
         <div className="flex items-center gap-2.5">
           <span className="text-xl">⚙️</span>
           <div>
-            <h1 className="font-bold text-sm md:text-base text-zinc-100">Admin Dashboard</h1>
-            <p className="text-[10px] text-zinc-400 hidden sm:block">Mingle Booth by Kala Kini Experience Manager</p>
+            <h1 className="font-bold text-sm md:text-base text-[#faf6ee]">Admin Dashboard</h1>
+            <p className="text-[10px] text-[#c8beb7] hidden sm:block">Mingle Booth by Kala Kini Experience Manager</p>
           </div>
         </div>
 

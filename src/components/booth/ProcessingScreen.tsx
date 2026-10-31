@@ -169,18 +169,18 @@ export function ProcessingScreen({ photos, settings, onComplete, onError }: Proc
         {/* Animated processing icon & rings */}
         <div className="relative w-28 h-28 flex items-center justify-center mb-6">
           <div
-            className="absolute inset-0 rounded-full border-2 border-purple-500/40 border-t-purple-400"
+            className="absolute inset-0 rounded-full border-2 border-[#e24a21]/50 border-t-[#e24a21]"
             style={{ animation: 'spinSlow 3s linear infinite' }}
           />
           <div
-            className="absolute inset-2 rounded-full border-2 border-pink-500/30 border-b-pink-400"
+            className="absolute inset-2 rounded-full border-2 border-[#f17b54]/40 border-b-[#f17b54]"
             style={{ animation: 'spinSlowReverse 2s linear infinite' }}
           />
           <span className="text-4xl animate-bounce">✨</span>
         </div>
 
         <h2 className="text-2xl font-bold text-hero-gradient mb-2">Creating your masterpiece…</h2>
-        <p className="text-xs text-zinc-400 mb-6">Please wait while we stitch and polish your photos</p>
+        <p className="text-xs text-[#c8beb7] mb-6">Please wait while we stitch and polish your photos</p>
 
         {/* Steps */}
         <div className="w-full flex flex-col gap-3 text-left">
@@ -195,8 +195,8 @@ export function ProcessingScreen({ photos, settings, onComplete, onError }: Proc
                   isDone
                     ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-200'
                     : isCurrent
-                    ? 'bg-purple-950/40 border-purple-400/50 text-purple-100 shadow-[0_0_15px_rgba(192,132,252,0.2)]'
-                    : 'bg-white/5 border-white/5 text-zinc-500'
+                    ? 'bg-[#e24a21]/20 border-[#e24a21]/50 text-[#faf6ee] shadow-[0_0_20px_rgba(226,74,33,0.25)]'
+                    : 'bg-white/5 border-white/5 text-[#8e8179]'
                 }`}
               >
                 <div className="flex items-center gap-3 text-sm font-medium">
@@ -205,7 +205,7 @@ export function ProcessingScreen({ photos, settings, onComplete, onError }: Proc
                 </div>
                 {isDone && <span className="text-xs font-bold text-emerald-400">✓ Done</span>}
                 {isCurrent && (
-                  <span className="text-xs font-semibold text-purple-300 animate-pulse">
+                  <span className="text-xs font-semibold text-[#fdeee9] animate-pulse">
                     {uploadProgress || 'Working…'}
                   </span>
                 )}
