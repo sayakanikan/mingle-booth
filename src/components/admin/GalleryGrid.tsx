@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { SessionData } from '@/types';
 import { deleteSessionAction, clearSessionsAction } from '@/actions/sessions';
+import { updateEventAction } from '@/actions/events';
 import { useToast } from '@/components/ui/Toast';
 
 interface GalleryGridProps {
@@ -11,10 +12,19 @@ interface GalleryGridProps {
   eventId?: string;
   eventName?: string;
   eventSubtitle?: string;
+  initialSaveToLocalGallery?: boolean;
 }
 
-export function GalleryGrid({ initialSessions, eventId, eventName, eventSubtitle }: GalleryGridProps) {
+export function GalleryGrid({
+  initialSessions,
+  eventId,
+  eventName,
+  eventSubtitle,
+  initialSaveToLocalGallery = false,
+}: GalleryGridProps) {
   const [sessions, setSessions] = useState<SessionData[]>(initialSessions);
+  const [saveToLocalGallery, setSaveToLocalGallery] = useState(Boolean(initialSaveToLocalGallery));
+  const [updatingSaveSetting, setUpdatingSaveSetting] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<SessionData | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -57,6 +67,30 @@ export function GalleryGrid({ initialSessions, eventId, eventName, eventSubtitle
     }
   };
 
+  const handleToggleSaveToLocal = async () => {
+    if (!eventId || updatingSaveSetting) return;
+    const nextVal = !saveToLocalGallery;
+    setUpdatingSaveSetting(true);
+    try {
+      const res = await updateEventAction(eventId, { saveToLocalGallery: nextVal });
+      if (res.success) {
+        setSaveToLocalGallery(nextVal);
+        toast(
+          nextVal
+            ? 'Auto-save to local gallery enabled'
+            : 'Auto-save to local gallery disabled',
+          'success'
+        );
+      } else {
+        toast('Failed to update setting: ' + res.error, 'error');
+      }
+    } catch (err: unknown) {
+      toast((err as Error).message, 'error');
+    } finally {
+      setUpdatingSaveSetting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8 pb-10">
       {/* Back button if in event detail */}
@@ -95,6 +129,44 @@ export function GalleryGrid({ initialSessions, eventId, eventName, eventSubtitle
           </button>
         )}
       </div>
+
+      {/* Auto-Save to Local Gallery Setting Card */}
+      {eventId && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 rounded-2xl glass border border-white/10 gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#e24a21]/20 border border-[#e24a21]/30 flex items-center justify-center text-xl shrink-0">
+              💾
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-white">Auto-save to Local Gallery</span>
+                {saveToLocalGallery && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Active
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Automatically saves photo strip, animated GIF, and all original photo shots to the local <code className="text-zinc-300 font-mono">./gallery/</code> folder on this computer when photos are taken.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={updatingSaveSetting}
+            onClick={handleToggleSaveToLocal}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 self-start sm:self-auto ${
+              saveToLocalGallery ? 'bg-[#e24a21]' : 'bg-white/20'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                saveToLocalGallery ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+      )}
 
       {sessions.length === 0 ? (
         <div className="p-14 text-center text-zinc-400 text-sm glass rounded-3xl border border-white/10 flex flex-col items-center gap-3">

@@ -16,6 +16,7 @@ export async function updateSettingsAction(patch: Partial<BoothSettings>): Promi
     if (patch.cameraResolution !== undefined) data.cameraResolution = patch.cameraResolution;
     if (patch.mirrorCamera !== undefined) data.mirrorCamera = patch.mirrorCamera;
     if (patch.mirrorResult !== undefined) data.mirrorResult = patch.mirrorResult;
+    if (patch.saveToLocalGallery !== undefined) data.saveToLocalGallery = patch.saveToLocalGallery;
     if (patch.eventTitle !== undefined) data.title = patch.eventTitle;
     if (patch.eventSubtitle !== undefined) data.subtitle = patch.eventSubtitle;
     if (patch.brandLogoDataUrl !== undefined) data.brandLogoUrl = patch.brandLogoDataUrl;

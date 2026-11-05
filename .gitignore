@@ -10,6 +10,7 @@ dist/
 legacy_src/
 next-env.d.ts
 *.tsbuildinfo
+gallery/
 
 # Prisma generated client
 src/generated/

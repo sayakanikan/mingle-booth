@@ -6,6 +6,7 @@ import { composeStripFromFrame, canvasToDataUrl } from '@/lib/booth/composite';
 import { buildGif } from '@/lib/booth/gifmaker';
 import { isCloudinaryConfigured, uploadSession } from '@/lib/booth/cloudinary';
 import { saveSessionAction } from '@/actions/sessions';
+import { saveToLocalGalleryAction } from '@/actions/localGallery';
 
 interface ProcessingScreenProps {
   photos: HTMLCanvasElement[];
@@ -111,6 +112,16 @@ export function ProcessingScreen({ photos, settings, onComplete, onError }: Proc
         } catch (err) {
           console.warn('Cloudinary upload error:', err);
         }
+      }
+
+      if (settings.saveToLocalGallery) {
+        saveToLocalGalleryAction({
+          sessionId,
+          eventTitle: settings.eventTitle || 'Mingle Booth',
+          stripDataUrl,
+          gifDataUrl,
+          photosDataUrls: photos.map((p) => p.toDataURL('image/jpeg', 0.92)),
+        }).catch((err) => console.warn('Local gallery save notice:', err));
       }
 
       // 4. Save to Database via Server Action

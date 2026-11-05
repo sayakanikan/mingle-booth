@@ -20,6 +20,7 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       eventId={event.id}
       eventName={event.title}
       eventSubtitle={event.subtitle}
+      initialSaveToLocalGallery={event.saveToLocalGallery ?? false}
     />
   );
 }

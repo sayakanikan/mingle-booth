@@ -28,6 +28,8 @@ create table if not exists public.events (
   camera_device_id    text,
   camera_resolution   text        not null default '1920x1080',
   mirror_camera       boolean     not null default true,
+  mirror_result       boolean     not null default true,
+  save_to_local_gallery boolean   not null default false,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );

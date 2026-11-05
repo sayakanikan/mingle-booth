@@ -23,6 +23,7 @@ export interface EventData {
   isActive: boolean;
   createdAt: string;
   sessionCount?: number;
+  saveToLocalGallery?: boolean;
 }
 
 export interface BoothSettings {
@@ -32,6 +33,7 @@ export interface BoothSettings {
   cameraResolution: string;
   mirrorCamera: boolean;
   mirrorResult?: boolean;
+  saveToLocalGallery?: boolean;
   eventTitle: string;
   eventSubtitle: string;
   brandLogoDataUrl: string | null;

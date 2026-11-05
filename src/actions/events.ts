@@ -16,6 +16,7 @@ export async function getEventsAction(): Promise<EventData[]> {
         title: true,
         subtitle: true,
         isActive: true,
+        saveToLocalGallery: true,
         createdAt: true,
         _count: {
           select: { sessions: true },
@@ -34,6 +35,7 @@ export async function getEventsAction(): Promise<EventData[]> {
       isActive: Boolean(e.isActive),
       createdAt: e.createdAt.toISOString(),
       sessionCount: e._count?.sessions ?? 0,
+      saveToLocalGallery: Boolean(e.saveToLocalGallery),
     }));
   } catch (err) {
     console.error('Failed to get events:', err);
@@ -45,6 +47,7 @@ export async function createEventAction(params: {
   title: string;
   subtitle: string;
   setActive?: boolean;
+  saveToLocalGallery?: boolean;
 }): Promise<{ success: boolean; eventId?: string; error?: string }> {
   await requireAdmin();
 
@@ -72,6 +75,7 @@ export async function createEventAction(params: {
           title,
           subtitle,
           isActive: shouldActivate,
+          saveToLocalGallery: Boolean(params.saveToLocalGallery),
         },
       });
 
@@ -112,28 +116,37 @@ export async function activateEventAction(eventId: string): Promise<{ success: b
 
 export async function updateEventAction(
   eventId: string,
-  patch: { title: string; subtitle: string }
+  patch: { title?: string; subtitle?: string; saveToLocalGallery?: boolean }
 ): Promise<{ success: boolean; error?: string }> {
   await requireAdmin();
 
   try {
-    const title = patch.title.trim();
-    const subtitle = patch.subtitle.trim();
+    const data: { title?: string; subtitle?: string; saveToLocalGallery?: boolean } = {};
 
-    if (!title) {
-      return { success: false, error: 'Event title cannot be empty' };
+    if (patch.title !== undefined) {
+      const title = patch.title.trim();
+      if (!title) {
+        return { success: false, error: 'Event title cannot be empty' };
+      }
+      data.title = title;
+    }
+
+    if (patch.subtitle !== undefined) {
+      data.subtitle = patch.subtitle.trim();
+    }
+
+    if (patch.saveToLocalGallery !== undefined) {
+      data.saveToLocalGallery = patch.saveToLocalGallery;
     }
 
     await prisma.event.update({
       where: { id: eventId },
-      data: {
-        title,
-        subtitle,
-      },
+      data,
     });
 
     revalidatePath('/');
     revalidatePath('/admin/events');
+    revalidatePath(`/admin/events/${eventId}`);
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: (err as Error).message };
@@ -209,6 +222,7 @@ export async function getEventWithSessionsAction(eventId: string): Promise<{
       isActive: Boolean(event.isActive),
       createdAt: event.createdAt.toISOString(),
       sessionCount: event.sessions.length,
+      saveToLocalGallery: Boolean(event.saveToLocalGallery),
     };
 
     const sessions: SessionData[] = event.sessions.map((s) => ({

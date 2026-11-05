@@ -24,6 +24,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
   const [title, setTitle] = useState('');
   const [subtitle, setSubtitle] = useState('');
   const [setActiveNow, setSetActiveNow] = useState(true);
+  const [saveToLocalGallery, setSaveToLocalGallery] = useState(false);
   
   // Granular loading states
   const [creatingLoading, setCreatingLoading] = useState(false);
@@ -46,6 +47,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
         title,
         subtitle,
         setActive: setActiveNow,
+        saveToLocalGallery,
       });
 
       if (res.success && res.eventId) {
@@ -57,6 +59,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
           isActive: setActiveNow,
           createdAt: new Date().toISOString(),
           sessionCount: 0,
+          saveToLocalGallery,
         };
 
         setEvents((prev) => {
@@ -68,6 +71,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
 
         setTitle('');
         setSubtitle('');
+        setSaveToLocalGallery(false);
         setIsCreating(false);
       } else {
         toast('Error creating event: ' + res.error, 'error');
@@ -110,6 +114,7 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
       const res = await updateEventAction(editingEvent.id, {
         title: editingEvent.title,
         subtitle: editingEvent.subtitle,
+        saveToLocalGallery: editingEvent.saveToLocalGallery,
       });
 
       if (res.success) {
@@ -224,32 +229,42 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
 
                 {/* Top Row: Status Badge & Actions */}
                 <div className="flex items-center justify-between gap-2">
-                  {ev.isActive ? (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                      Active Event
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={activatingId !== null || deletingId !== null}
-                      onClick={() => handleActivate(ev.id)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-purple-600/30 hover:border-purple-500/40 text-zinc-300 hover:text-purple-200 border border-white/10 transition-all shadow-sm disabled:opacity-50"
-                      title="Activate this event for the photo booth"
-                    >
-                      {activatingId === ev.id ? (
-                        <>
-                          <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
-                          <span>Activating…</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>⚡</span>
-                          <span>Set as Active</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {ev.isActive ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-500/10">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        Active Event
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={activatingId !== null || deletingId !== null}
+                        onClick={() => handleActivate(ev.id)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-purple-600/30 hover:border-purple-500/40 text-zinc-300 hover:text-purple-200 border border-white/10 transition-all shadow-sm disabled:opacity-50"
+                        title="Activate this event for the photo booth"
+                      >
+                        {activatingId === ev.id ? (
+                          <>
+                            <span className="w-3 h-3 rounded-full border-2 border-purple-400/30 border-t-purple-400 animate-spin inline-block" />
+                            <span>Activating…</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>⚡</span>
+                            <span>Set as Active</span>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {ev.saveToLocalGallery && (
+                      <span
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-[#e24a21]/20 text-[#fdeee9] border border-[#e24a21]/30 shadow-sm"
+                        title="Auto-save to local gallery enabled"
+                      >
+                        💾 Local
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-1.5">
                     <button
@@ -372,6 +387,21 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                 </label>
               </div>
 
+              <div className="flex items-start gap-2.5 pt-1">
+                <input
+                  type="checkbox"
+                  id="createSaveToLocalGallery"
+                  checked={saveToLocalGallery}
+                  disabled={creatingLoading}
+                  onChange={(e) => setSaveToLocalGallery(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-[#e24a21] bg-black/40 border-white/20 focus:ring-[#e24a21]"
+                />
+                <label htmlFor="createSaveToLocalGallery" className="text-xs text-zinc-300 cursor-pointer select-none">
+                  <span className="font-medium text-white block">Auto-save to Local Gallery</span>
+                  <span className="text-[11px] text-zinc-400">Save strips, animated GIF, and photos to ./gallery/ on this machine</span>
+                </label>
+              </div>
+
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
                 <button
                   type="button"
@@ -446,6 +476,23 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                   }
                   className="input text-xs sm:text-sm w-full disabled:opacity-50"
                 />
+              </div>
+
+              <div className="flex items-start gap-2.5 pt-1">
+                <input
+                  type="checkbox"
+                  id="editSaveToLocalGallery"
+                  checked={Boolean(editingEvent.saveToLocalGallery)}
+                  disabled={updatingLoading}
+                  onChange={(e) =>
+                    setEditingEvent({ ...editingEvent, saveToLocalGallery: e.target.checked })
+                  }
+                  className="w-4 h-4 mt-0.5 rounded text-[#e24a21] bg-black/40 border-white/20 focus:ring-[#e24a21]"
+                />
+                <label htmlFor="editSaveToLocalGallery" className="text-xs text-zinc-300 cursor-pointer select-none">
+                  <span className="font-medium text-white block">Auto-save to Local Gallery</span>
+                  <span className="text-[11px] text-zinc-400">Save strips, animated GIF, and photos to ./gallery/ on this machine</span>
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">

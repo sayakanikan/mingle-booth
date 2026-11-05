@@ -15,6 +15,7 @@ export function BrandingForm({ settings }: BrandingFormProps) {
   const [textColor, setTextColor] = useState(settings.stripTextColor || '#ffffff');
   const [showTitle, setShowTitle] = useState(settings.stripShowTitle !== false);
   const [showDate, setShowDate] = useState(settings.stripShowDate !== false);
+  const [saveToLocalGallery, setSaveToLocalGallery] = useState(Boolean(settings.saveToLocalGallery));
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -39,6 +40,7 @@ export function BrandingForm({ settings }: BrandingFormProps) {
         stripTextColor: textColor,
         stripShowTitle: showTitle,
         stripShowDate: showDate,
+        saveToLocalGallery,
       });
 
       if (res.success) {
@@ -195,6 +197,37 @@ export function BrandingForm({ settings }: BrandingFormProps) {
               </div>
             </label>
           </div>
+        </div>
+
+        {/* Local Storage & Backup */}
+        <div className="flex flex-col gap-3 pt-2 border-t border-white/10">
+          <label className="text-xs font-semibold text-zinc-200 uppercase tracking-wider">
+            Local Gallery & Backup
+          </label>
+          <label htmlFor="saveToLocalGallery" className="flex items-start sm:items-center gap-3.5 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-all cursor-pointer">
+            <input
+              type="checkbox"
+              id="saveToLocalGallery"
+              checked={saveToLocalGallery}
+              onChange={(e) => setSaveToLocalGallery(e.target.checked)}
+              className="w-5 h-5 mt-0.5 sm:mt-0 rounded-md text-[#e24a21] focus:ring-[#e24a21] bg-white/10 border-white/20 cursor-pointer shrink-0"
+            />
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-zinc-200">
+                  Auto-save to Local Gallery
+                </span>
+                {saveToLocalGallery && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    Active
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-zinc-400 mt-0.5">
+                Automatically saves photo strip, animated GIF, and all original photo shots to the local <code className="text-zinc-300 font-mono">./gallery/</code> folder on this computer when photos are taken.
+              </span>
+            </div>
+          </label>
         </div>
 
         <div className="flex justify-end pt-4 border-t border-white/10">
