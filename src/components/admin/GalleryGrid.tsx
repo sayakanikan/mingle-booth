@@ -204,17 +204,16 @@ export function GalleryGrid({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+        <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
           {eventId && (
             <a
               href={`/e/${eventId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-secondary btn-sm text-xs px-3.5 py-2 flex items-center gap-1.5 hover:border-purple-400"
-              title="Open public event gallery page"
+              className="btn btn-secondary btn-sm w-9 h-9 flex items-center justify-center hover:border-purple-400"
+              title="Open public event gallery"
             >
-              <span>🌐</span>
-              <span>Public Gallery ↗</span>
+              🌐
             </a>
           )}
 
@@ -224,20 +223,19 @@ export function GalleryGrid({
                 type="button"
                 disabled={regeneratingId !== null || regeneratingAll || clearingAll || deletingId !== null}
                 onClick={executeRegenerateAll}
-                className="btn btn-secondary btn-sm text-xs px-3.5 py-2 flex items-center gap-1.5 hover:border-purple-400 disabled:opacity-50"
-                title="Regenerate all photo strips and GIFs in higher quality from raw photos"
+                className="btn btn-secondary btn-sm w-9 h-9 flex items-center justify-center hover:border-purple-400 disabled:opacity-50"
+                title={regeneratingAll ? 'Regenerating all…' : 'Regenerate all strips & GIFs from raw photos'}
               >
-                <span>🔄</span>
-                <span>{regeneratingAll ? 'Regenerating…' : 'Regenerate All'}</span>
+                🔄
               </button>
 
               <button
                 onClick={() => setShowClearConfirm(true)}
                 disabled={clearingAll || deletingId !== null || regeneratingId !== null || regeneratingAll}
-                className="btn btn-danger btn-sm text-xs px-4 py-2 shadow-lg disabled:opacity-50 flex items-center gap-1.5"
+                className="btn btn-danger btn-sm w-9 h-9 flex items-center justify-center disabled:opacity-50"
+                title={`Clear all ${sessions.length} photo sessions`}
               >
-                <span>🗑️</span>
-                <span>Clear All Photos ({sessions.length})</span>
+                🗑️
               </button>
             </>
           )}
@@ -367,17 +365,18 @@ export function GalleryGrid({
                     href={`/s/${s.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-secondary btn-sm flex-1 text-xs py-2 text-center font-medium"
+                    className="btn btn-secondary btn-sm flex-1 h-9 flex items-center justify-center text-xs font-medium"
+                    title="Open guest viewer"
                   >
-                    View ↗
+                    👁️
                   </a>
                   <a
                     href={s.stripUrl}
                     download={`session-${s.id}.jpg`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm px-2.5 text-xs py-2"
-                    title="Download strip"
+                    className="btn btn-primary btn-sm w-9 h-9 flex items-center justify-center text-xs"
+                    title="Download photo strip"
                   >
                     ⬇
                   </a>
@@ -385,20 +384,19 @@ export function GalleryGrid({
                     type="button"
                     disabled={isDeleting || isRegenerating || regeneratingAll || deletingId !== null}
                     onClick={() => executeRegenerateSession(s)}
-                    className="btn btn-secondary btn-sm px-2.5 text-xs py-2 hover:border-purple-400 hover:text-purple-200 transition-colors flex items-center gap-1"
-                    title="Regenerate photo strip and GIF in high quality from raw photos"
+                    className="btn btn-secondary btn-sm w-9 h-9 flex items-center justify-center hover:border-purple-400 hover:text-purple-200 transition-colors disabled:opacity-50"
+                    title="Regenerate photo strip & GIF from raw photos"
                   >
-                    <span>🔄</span>
-                    <span className="hidden xl:inline">Regenerate</span>
+                    🔄
                   </button>
                   <button
                     type="button"
                     disabled={isDeleting || isRegenerating || deletingId !== null}
                     onClick={() => setSessionToDelete(s)}
-                    className="btn btn-danger btn-sm px-2.5 text-xs py-2 hover:bg-red-600 transition-colors flex items-center gap-1"
-                    title="Delete this photostrip, gif, and photos"
+                    className="btn btn-danger btn-sm w-9 h-9 flex items-center justify-center transition-colors disabled:opacity-50"
+                    title="Delete this session"
                   >
-                    <span>🗑️</span>
+                    🗑️
                   </button>
                 </div>
               </div>
