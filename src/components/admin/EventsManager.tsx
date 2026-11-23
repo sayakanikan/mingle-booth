@@ -312,13 +312,24 @@ export function EventsManager({ initialEvents }: EventsManagerProps) {
                 </div>
 
                 {/* Main Link to Gallery */}
-                <Link
-                  href={`/admin/events/${ev.id}`}
-                  className="btn btn-secondary btn-sm w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2 group-hover:border-purple-400/50 hover:bg-purple-600/20 hover:text-purple-200 transition-all"
-                >
-                  <span>🖼️ View Photos ({ev.sessionCount ?? 0})</span>
-                  <span>➔</span>
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/admin/events/${ev.id}`}
+                    className="btn btn-secondary btn-sm flex-1 py-2.5 text-xs font-semibold flex items-center justify-center gap-2 group-hover:border-purple-400/50 hover:bg-purple-600/20 hover:text-purple-200 transition-all"
+                  >
+                    <span>🖼️ Manage Photos ({ev.sessionCount ?? 0})</span>
+                    <span>➔</span>
+                  </Link>
+                  <a
+                    href={`/e/${ev.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-secondary btn-sm px-3 py-2.5 text-xs text-zinc-300 hover:text-white hover:border-purple-400 transition-all"
+                    title="View public event gallery"
+                  >
+                    <span>🌐</span>
+                  </a>
+                </div>
               </div>
             );
           })}

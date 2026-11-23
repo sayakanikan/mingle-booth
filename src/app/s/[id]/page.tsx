@@ -16,7 +16,7 @@ export default async function ViewerPage({ params }: ViewerPageProps) {
         orderBy: { slotIndex: 'asc' },
       },
       event: {
-        select: { title: true },
+        select: { id: true, title: true },
       },
     },
   });
@@ -32,6 +32,7 @@ export default async function ViewerPage({ params }: ViewerPageProps) {
       gifUrl={session.gifUrl}
       originalUrls={session.photos.map((p) => p.url)}
       isCloud={session.stripUrl.startsWith('http')}
+      eventId={session.event.id}
     />
   );
 }

@@ -118,16 +118,31 @@ export function GalleryGrid({
           </p>
         </div>
 
-        {sessions.length > 0 && (
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            disabled={clearingAll || deletingId !== null}
-            className="btn btn-danger btn-sm text-xs px-4 py-2 self-start sm:self-auto shadow-lg disabled:opacity-50 flex items-center gap-1.5"
-          >
-            <span>🗑️</span>
-            <span>Clear All Photos ({sessions.length})</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
+          {eventId && (
+            <a
+              href={`/e/${eventId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-secondary btn-sm text-xs px-3.5 py-2 flex items-center gap-1.5 hover:border-purple-400"
+              title="Open public event gallery page"
+            >
+              <span>🌐</span>
+              <span>Public Gallery ↗</span>
+            </a>
+          )}
+
+          {sessions.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              disabled={clearingAll || deletingId !== null}
+              className="btn btn-danger btn-sm text-xs px-4 py-2 shadow-lg disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <span>🗑️</span>
+              <span>Clear All Photos ({sessions.length})</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Auto-Save to Local Gallery Setting Card */}

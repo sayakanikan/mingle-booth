@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useToast } from '@/components/ui/Toast';
 
 interface SessionViewerProps {
@@ -9,6 +10,7 @@ interface SessionViewerProps {
   gifUrl?: string | null;
   originalUrls?: string[];
   isCloud?: boolean;
+  eventId?: string;
 }
 
 export function SessionViewer({
@@ -16,6 +18,7 @@ export function SessionViewer({
   stripUrl,
   gifUrl,
   originalUrls = [],
+  eventId,
 }: SessionViewerProps) {
   const { toast } = useToast();
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
@@ -79,6 +82,15 @@ export function SessionViewer({
         <p className="text-xs text-[#c8beb7] tracking-wider uppercase font-medium">
           Your photo session memories
         </p>
+        {eventId && (
+          <Link
+            href={`/e/${eventId}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#f17b54] hover:text-white transition-colors mt-2 py-1 px-3.5 rounded-full bg-white/5 border border-white/10 hover:border-[#e24a21]/50 shadow-sm"
+          >
+            <span>🖼️ View All Event Photos</span>
+            <span>➔</span>
+          </Link>
+        )}
       </div>
 
       {!hasPhotos && (
