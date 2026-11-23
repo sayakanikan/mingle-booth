@@ -74,8 +74,8 @@ export function ProcessingScreen({ photos, settings, onComplete, onError }: Proc
       let gifBlob: Blob | null = null;
       try {
         const gifResult = await buildGif(photos, {
-          width: 480,
-          height: 360,
+          width: photos[0]?.width || 1920,
+          height: photos[0]?.height || 1080,
           delay: 700,
           quality: 8,
         });

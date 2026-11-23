@@ -5,16 +5,22 @@ export async function buildGif(
     height?: number;
     delay?: number;
     quality?: number;
+    workers?: number;
   } = {}
 ): Promise<{ dataUrl: string; blob: Blob }> {
-  const { width = 480, height = 360, delay = 700, quality = 8 } = opts;
+  const firstPhoto = photos[0];
+  const width = opts.width || firstPhoto?.width || 1920;
+  const height = opts.height || firstPhoto?.height || 1080;
+  const delay = opts.delay ?? 700;
+  const quality = opts.quality ?? 8;
+  const workers = opts.workers ?? (typeof navigator !== 'undefined' ? Math.min(navigator.hardwareConcurrency || 4, 4) : 4);
 
   // @ts-expect-error gif.js does not provide native TS types
   const { default: GIF } = await import('gif.js');
 
   return new Promise((resolve, reject) => {
     const gif = new GIF({
-      workers: 2,
+      workers,
       quality,
       width,
       height,

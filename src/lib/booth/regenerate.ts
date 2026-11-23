@@ -86,14 +86,16 @@ export async function regenerateSessionMedia(
 
   const stripDataUrl = canvasToDataUrl(stripCanvas, 0.95);
 
-  // 4. Build Animated GIF
-  onProgress?.('Generating high-res animated GIF…');
+  // 4. Build Animated GIF matching the original photo resolution (1920x1080 or native raw dimensions)
+  onProgress?.('Generating high-res animated GIF (following original photo dimensions)…');
   let gifDataUrl: string | null = null;
   let gifBlob: Blob | null = null;
   try {
+    const origW = photoCanvases[0]?.width || 1920;
+    const origH = photoCanvases[0]?.height || 1080;
     const gifResult = await buildGif(photoCanvases, {
-      width: 640,
-      height: 480,
+      width: origW,
+      height: origH,
       delay: 650,
       quality: 5,
     });
