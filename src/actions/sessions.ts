@@ -240,3 +240,30 @@ export async function getSessionsAction(limit = 100, eventId?: string): Promise<
     return [];
   }
 }
+
+export async function updateSessionMediaAction(params: {
+  sessionId: string;
+  stripUrl: string;
+  gifUrl: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  await requireAdmin();
+
+  try {
+    await prisma.photoSession.update({
+      where: { id: params.sessionId },
+      data: {
+        stripUrl: params.stripUrl,
+        gifUrl: params.gifUrl,
+      },
+    });
+
+    revalidatePath('/admin/events');
+    revalidatePath('/admin/events/[id]', 'page');
+    revalidatePath('/admin/gallery');
+    revalidatePath(`/s/${params.sessionId}`);
+    revalidatePath('/e', 'layout');
+    return { success: true };
+  } catch (err: unknown) {
+    return { success: false, error: (err as Error).message };
+  }
+}

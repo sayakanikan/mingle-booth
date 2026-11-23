@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
-import { EventData, SessionData } from '@/types';
+import { EventData, SessionData, Slot } from '@/types';
 import { clearSessionsAction } from './sessions';
 
 export async function getEventsAction(): Promise<EventData[]> {
@@ -200,6 +200,9 @@ export async function getEventWithSessionsAction(eventId: string): Promise<{
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       include: {
+        frames: {
+          orderBy: { createdAt: 'desc' },
+        },
         sessions: {
           include: {
             photos: {
@@ -223,6 +226,19 @@ export async function getEventWithSessionsAction(eventId: string): Promise<{
       createdAt: event.createdAt.toISOString(),
       sessionCount: event.sessions.length,
       saveToLocalGallery: Boolean(event.saveToLocalGallery),
+      stripBgColor: event.stripBgColor,
+      stripTextColor: event.stripTextColor,
+      stripShowTitle: event.stripShowTitle,
+      stripShowDate: event.stripShowDate,
+      frames: event.frames.map((f) => ({
+        id: f.id,
+        name: f.name,
+        dataUrl: f.dataUrl,
+        width: f.width,
+        height: f.height,
+        slots: Array.isArray(f.slots) ? (f.slots as unknown as Slot[]) : [],
+        isActive: f.isActive,
+      })),
     };
 
     const sessions: SessionData[] = event.sessions.map((s) => ({

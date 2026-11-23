@@ -36,7 +36,6 @@ export function EventGallery({ event, sessions }: EventGalleryProps) {
   const { toast } = useToast();
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'strip' | 'gif' | 'photos'>('all');
 
   const selectedIndex = useMemo(() => {
@@ -45,19 +44,6 @@ export function EventGallery({ event, sessions }: EventGalleryProps) {
   }, [selectedSessionId, sessions]);
 
   const selectedSession = selectedIndex >= 0 ? sessions[selectedIndex] : null;
-
-  // Filter sessions by search/query
-  const filteredSessions = useMemo(() => {
-    if (!searchQuery.trim()) return sessions;
-    const q = searchQuery.toLowerCase();
-    return sessions.filter(
-      (s) =>
-        s.id.toLowerCase().includes(q) ||
-        s.layout.toLowerCase().includes(q) ||
-        new Date(s.createdAt).toLocaleDateString().toLowerCase().includes(q) ||
-        new Date(s.createdAt).toLocaleTimeString().toLowerCase().includes(q)
-    );
-  }, [sessions, searchQuery]);
 
   // Navigate between sessions
   const goToNext = useCallback(() => {
@@ -157,7 +143,7 @@ export function EventGallery({ event, sessions }: EventGalleryProps) {
           {event.subtitle || 'Photo Session Gallery'}
         </p>
 
-        {/* Counter Badge & Search */}
+        {/* Counter Badge */}
         <div className="flex items-center gap-3 mt-4 flex-wrap justify-center">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 border border-white/10 text-[#faf6ee]">
             <span>📸</span>
@@ -165,27 +151,6 @@ export function EventGallery({ event, sessions }: EventGalleryProps) {
               {sessions.length} {sessions.length === 1 ? 'Photo Strip' : 'Photo Strips'}
             </span>
           </span>
-
-          {sessions.length > 6 && (
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search sessions…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs text-[#faf6ee] placeholder:text-[#8e8179] focus:outline-none focus:border-[#e24a21] w-36 sm:w-48 transition-all"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8e8179] hover:text-[#faf6ee]"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </header>
 
@@ -198,21 +163,10 @@ export function EventGallery({ event, sessions }: EventGalleryProps) {
             No photo sessions have been captured for this event yet. Visit the photo booth to take the first photos!
           </p>
         </div>
-      ) : filteredSessions.length === 0 ? (
-        <div className="text-center p-8 glass rounded-2xl max-w-sm w-full border border-white/10 mt-8">
-          <p className="text-xs text-[#c8beb7]">No photo sessions match your search.</p>
-          <button
-            type="button"
-            onClick={() => setSearchQuery('')}
-            className="btn btn-secondary btn-sm text-xs mt-3 px-4"
-          >
-            Clear Search
-          </button>
-        </div>
       ) : (
         /* Grid of Photostrips */
         <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-5">
-          {filteredSessions.map((session) => {
+          {sessions.map((session) => {
             const formattedDate = session.createdAt
               ? new Date(session.createdAt).toLocaleTimeString([], {
                   hour: '2-digit',

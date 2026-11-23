@@ -24,6 +24,11 @@ export interface EventData {
   createdAt: string;
   sessionCount?: number;
   saveToLocalGallery?: boolean;
+  stripBgColor?: string;
+  stripTextColor?: string;
+  stripShowTitle?: boolean;
+  stripShowDate?: boolean;
+  frames?: Frame[];
 }
 
 export interface BoothSettings {

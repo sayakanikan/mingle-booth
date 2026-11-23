@@ -21,6 +21,13 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       eventName={event.title}
       eventSubtitle={event.subtitle}
       initialSaveToLocalGallery={event.saveToLocalGallery ?? false}
+      eventConfig={{
+        stripBgColor: event.stripBgColor,
+        stripTextColor: event.stripTextColor,
+        stripShowTitle: event.stripShowTitle,
+        stripShowDate: event.stripShowDate,
+        frames: event.frames,
+      }}
     />
   );
 }

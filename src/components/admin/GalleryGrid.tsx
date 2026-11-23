@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { SessionData } from '@/types';
 import { deleteSessionAction, clearSessionsAction } from '@/actions/sessions';
 import { updateEventAction } from '@/actions/events';
+import { regenerateSessionMedia, RegenerateEventConfig } from '@/lib/booth/regenerate';
 import { useToast } from '@/components/ui/Toast';
 
 interface GalleryGridProps {
@@ -13,6 +14,7 @@ interface GalleryGridProps {
   eventName?: string;
   eventSubtitle?: string;
   initialSaveToLocalGallery?: boolean;
+  eventConfig?: RegenerateEventConfig;
 }
 
 export function GalleryGrid({
@@ -21,6 +23,7 @@ export function GalleryGrid({
   eventName,
   eventSubtitle,
   initialSaveToLocalGallery = false,
+  eventConfig,
 }: GalleryGridProps) {
   const [sessions, setSessions] = useState<SessionData[]>(initialSessions);
   const [saveToLocalGallery, setSaveToLocalGallery] = useState(Boolean(initialSaveToLocalGallery));
@@ -29,7 +32,90 @@ export function GalleryGrid({
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [clearingAll, setClearingAll] = useState(false);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [regenerateProgress, setRegenerateProgress] = useState<string>('');
+  const [regeneratingAll, setRegeneratingAll] = useState(false);
   const { toast } = useToast();
+
+  const executeRegenerateSession = async (session: SessionData) => {
+    setRegeneratingId(session.id);
+    try {
+      const res = await regenerateSessionMedia(
+        session,
+        eventName || 'Mingle Booth',
+        eventConfig,
+        saveToLocalGallery,
+        (progress) => setRegenerateProgress(progress)
+      );
+
+      if (res.success && res.stripUrl) {
+        setSessions((prev) =>
+          prev.map((s) =>
+            s.id === session.id
+              ? {
+                  ...s,
+                  stripUrl: res.stripUrl!,
+                  gifUrl: res.gifUrl !== undefined ? res.gifUrl : s.gifUrl,
+                }
+              : s
+          )
+        );
+        toast('Photo strip and GIF regenerated with high quality!', 'success');
+      } else {
+        toast('Failed to regenerate: ' + (res.error || 'Unknown error'), 'error');
+      }
+    } catch (err: unknown) {
+      toast((err as Error).message, 'error');
+    } finally {
+      setRegeneratingId(null);
+      setRegenerateProgress('');
+    }
+  };
+
+  const executeRegenerateAll = async () => {
+    if (!sessions.length || regeneratingAll) return;
+    setRegeneratingAll(true);
+    let successCount = 0;
+
+    for (let i = 0; i < sessions.length; i++) {
+      const s = sessions[i];
+      setRegeneratingId(s.id);
+      setRegenerateProgress(`[${i + 1}/${sessions.length}] Regenerating photos…`);
+      try {
+        const res = await regenerateSessionMedia(
+          s,
+          eventName || 'Mingle Booth',
+          eventConfig,
+          saveToLocalGallery,
+          (msg) => setRegenerateProgress(`[${i + 1}/${sessions.length}] ${msg}`)
+        );
+        if (res.success && res.stripUrl) {
+          setSessions((prev) =>
+            prev.map((item) =>
+              item.id === s.id
+                ? {
+                    ...item,
+                    stripUrl: res.stripUrl!,
+                    gifUrl: res.gifUrl !== undefined ? res.gifUrl : item.gifUrl,
+                  }
+                : item
+            )
+          );
+          successCount++;
+        }
+      } catch (err) {
+        console.warn(`Failed regenerating session ${s.id}:`, err);
+      }
+    }
+
+    setRegeneratingId(null);
+    setRegenerateProgress('');
+    setRegeneratingAll(false);
+    toast(
+      `Regenerated ${successCount} of ${sessions.length} photo sessions!`,
+      successCount === sessions.length ? 'success' : 'info'
+    );
+  };
 
   const executeDelete = async (sessionId: string) => {
     setDeletingId(sessionId);
@@ -133,14 +219,27 @@ export function GalleryGrid({
           )}
 
           {sessions.length > 0 && (
-            <button
-              onClick={() => setShowClearConfirm(true)}
-              disabled={clearingAll || deletingId !== null}
-              className="btn btn-danger btn-sm text-xs px-4 py-2 shadow-lg disabled:opacity-50 flex items-center gap-1.5"
-            >
-              <span>🗑️</span>
-              <span>Clear All Photos ({sessions.length})</span>
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={regeneratingId !== null || regeneratingAll || clearingAll || deletingId !== null}
+                onClick={executeRegenerateAll}
+                className="btn btn-secondary btn-sm text-xs px-3.5 py-2 flex items-center gap-1.5 hover:border-purple-400 disabled:opacity-50"
+                title="Regenerate all photo strips and GIFs in higher quality from raw photos"
+              >
+                <span>🔄</span>
+                <span>{regeneratingAll ? 'Regenerating…' : 'Regenerate All'}</span>
+              </button>
+
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                disabled={clearingAll || deletingId !== null || regeneratingId !== null || regeneratingAll}
+                className="btn btn-danger btn-sm text-xs px-4 py-2 shadow-lg disabled:opacity-50 flex items-center gap-1.5"
+              >
+                <span>🗑️</span>
+                <span>Clear All Photos ({sessions.length})</span>
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -198,6 +297,7 @@ export function GalleryGrid({
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {sessions.map((s) => {
             const isDeleting = deletingId === s.id;
+            const isRegenerating = regeneratingId === s.id;
             const formattedDate = s.createdAt
               ? new Date(s.createdAt).toLocaleString(undefined, {
                   dateStyle: 'medium',
@@ -211,6 +311,8 @@ export function GalleryGrid({
                 className={`group relative rounded-2xl glass p-4 flex flex-col justify-between gap-3 border transition-all shadow-lg overflow-hidden ${
                   isDeleting
                     ? 'border-red-500/50 opacity-80'
+                    : isRegenerating
+                    ? 'border-purple-500/60 ring-2 ring-purple-500/30'
                     : 'border-white/10 hover:border-white/25'
                 }`}
               >
@@ -220,6 +322,17 @@ export function GalleryGrid({
                     <div className="w-8 h-8 rounded-full border-2 border-red-500/30 border-t-red-400 animate-spin" />
                     <span className="text-xs font-semibold text-red-200">Deleting Photo…</span>
                     <span className="text-[10px] text-zinc-400">Removing from cloud storage</span>
+                  </div>
+                )}
+
+                {/* Regenerating Loading Overlay */}
+                {isRegenerating && (
+                  <div className="absolute inset-0 z-20 bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full border-2 border-purple-500/30 border-t-purple-400 animate-spin" />
+                    <span className="text-xs font-semibold text-purple-200">Regenerating Media…</span>
+                    <span className="text-[10px] text-zinc-300 max-w-[200px] leading-tight">
+                      {regenerateProgress || 'Recomposing strip & GIF in high quality'}
+                    </span>
                   </div>
                 )}
 
@@ -248,7 +361,7 @@ export function GalleryGrid({
                   </div>
                 </div>
 
-                {/* Only ONE single action row: View, Download, and Delete */}
+                {/* Action row: View, Download, Regenerate, Delete */}
                 <div className="flex gap-2 w-full mt-1 items-center">
                   <a
                     href={`/s/${s.id}`}
@@ -263,20 +376,29 @@ export function GalleryGrid({
                     download={`session-${s.id}.jpg`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn btn-primary btn-sm px-3 text-xs py-2"
+                    className="btn btn-primary btn-sm px-2.5 text-xs py-2"
                     title="Download strip"
                   >
                     ⬇
                   </a>
                   <button
                     type="button"
-                    disabled={isDeleting || deletingId !== null}
+                    disabled={isDeleting || isRegenerating || regeneratingAll || deletingId !== null}
+                    onClick={() => executeRegenerateSession(s)}
+                    className="btn btn-secondary btn-sm px-2.5 text-xs py-2 hover:border-purple-400 hover:text-purple-200 transition-colors flex items-center gap-1"
+                    title="Regenerate photo strip and GIF in high quality from raw photos"
+                  >
+                    <span>🔄</span>
+                    <span className="hidden xl:inline">Regenerate</span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDeleting || isRegenerating || deletingId !== null}
                     onClick={() => setSessionToDelete(s)}
-                    className="btn btn-danger btn-sm px-3 text-xs py-2 hover:bg-red-600 transition-colors flex items-center gap-1"
+                    className="btn btn-danger btn-sm px-2.5 text-xs py-2 hover:bg-red-600 transition-colors flex items-center gap-1"
                     title="Delete this photostrip, gif, and photos"
                   >
                     <span>🗑️</span>
-                    <span>Delete</span>
                   </button>
                 </div>
               </div>
