@@ -15,7 +15,7 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "gif.js": "^0.2.0",
-    "next": "^16.4.3",
+    "next": "^16.4.6",
     "pg": "^8.23.1",
     "prisma": "^7.10.1",
     "qrcode": "^1.5.4",
